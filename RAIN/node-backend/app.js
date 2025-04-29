@@ -6,10 +6,9 @@ var logger = require('morgan');
 
 var mongoose = require('mongoose');
 var mongoHost = "";
-if(process.env.NODE_ENV === 'development'){
+if (process.env.NODE_ENV === 'development') {
   mongoHost = "localhost";
-}
-else{
+} else {
   mongoHost = "mongo-container";
 }
 var mongoDB = "mongodb://" + mongoHost + ":27017/backend";
@@ -23,6 +22,7 @@ var usersRouter = require('./routes/userRoutes');
 var landmarksRouter = require('./routes/landmarkRoutes');
 var userActivitiesRouter = require('./routes/userActivityRoutes');
 var sensorDataRouter = require('./routes/sensorDataRoutes');
+var adminRouter = require('./routes/adminRoutes'); // 🚀 added admin routes
 
 var app = express();
 
@@ -42,7 +42,7 @@ app.use(session({
   secret: 'work hard',
   resave: true,
   saveUninitialized: false,
-  store: MongoStore.create({mongoUrl: mongoDB})
+  store: MongoStore.create({ mongoUrl: mongoDB })
 }));
 
 app.use(function (req, res, next) {
@@ -50,24 +50,23 @@ app.use(function (req, res, next) {
   next();
 });
 
+// Routes
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/landmarks', landmarksRouter);
 app.use('/userActivities', userActivitiesRouter);
 app.use('/sensorData', sensorDataRouter);
+app.use('/admin', adminRouter); // 🚀 mounted admin router
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
+app.use(function (err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
   res.status(err.status || 500);
   res.render('error');
 });
