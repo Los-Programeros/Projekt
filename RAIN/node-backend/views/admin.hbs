@@ -1,29 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="/stylesheets/style.css" />
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="/stylesheets/style.css" />
 </head>
-
 <body>
-    <div class="sidebar">
-        <h2>Users</h2>
-        <ul class="user-list">
-            {{#each users}}
-            <li onclick="loadUser('{{this.id}}')">{{this.name}}</li>
-            {{/each}}
-        </ul>
-    </div>
+  <div class="sidebar">
+    <h2>Users</h2>
+    <ul class="user-list">
+      {{#each users}}
+        <li>{{this.username}}</li>
+      {{/each}}
+    </ul>
+  </div>
 
-    <div class="main-content">
-        <h1 id="user-name">Select a user</h1>
-        <div id="dashboard" class="dashboard-grid"></div>
-    </div>
+  <div class="main-content">
+    <h1>Admin Overview</h1>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="/javascripts/dashboard.js" defer></script>
+    <section>
+      <h2>Landmarks</h2>
+      <ul>
+        {{#each landmarks}}
+          <li>{{this.name}} — {{this.category}}</li>
+        {{/each}}
+      </ul>
+    </section>
+
+    <section>
+      <h2>Sensor Data</h2>
+      <ul>
+        {{#each sensorData}}
+          <li>{{this.date}} — {{this.accelerometer}}</li>
+        {{/each}}
+      </ul>
+    </section>
+
+    <section>
+      <h2>User Activities</h2>
+      <ul>
+        {{#each userActivities}}
+          <li>{{this.date}} — visited: {{this.visited}}</li>
+        {{/each}}
+      </ul>
+    </section>
+  </div>
+
+  <script src="/javascripts/dashboard.js" defer></script>
 </body>
-
 </html>
