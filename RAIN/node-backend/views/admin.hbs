@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+</head>
+
+<body>
+    <div class="sidebar">
+        <h2>Users</h2>
+        <ul class="user-list">
+            {{#each users}}
+            <li onclick="loadUser('{{this.id}}')">{{this.name}}</li>
+            {{/each}}
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <h1 id="user-name">Select a user</h1>
+        <div id="dashboard" class="dashboard-grid"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/javascripts/dashboard.js" defer></script>
+</body>
+
+</html>
