@@ -4,6 +4,7 @@ import time
 import json
 import subprocess
 import urllib.parse
+import csv
 
 def geocode(place): # Pretvori ime znamenitosti v GPS koordinate
     encoded_place = urllib.parse.quote(place)
@@ -22,8 +23,16 @@ response.html.render() # izvede javascript kodo
 soup = BeautifulSoup(response.html.html, "html.parser")
 landmarks = soup.find_all("h3", attrs={"class":"catalogue-item__title"})
 
-for landmark in landmarks:
-    name = landmark.text.strip()
-    print(name)
-    print(geocode(name))
-    time.sleep(1)
+with open('landmarks.csv', mode='w', newline='', encoding='utf-8') as file:
+    writer = csv.writer(file)
+    writer.writerow(['Landmark', 'Coordinates'])
+
+    for landmark in landmarks:
+        name = landmark.text.strip()
+        coordinates = geocode(name)
+        print(f"{name}: {coordinates}")
+        
+        if coordinates != "-,-":
+            writer.writerow([name, coordinates])
+        
+        time.sleep(1)
