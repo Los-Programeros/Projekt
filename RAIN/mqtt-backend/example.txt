@@ -1,0 +1,7 @@
+{
+  "user": "60d21b4667d0d8992e610c85",
+  "userActivity": "60d21b5c67d0d8992e610c86",
+  "date": "2025-05-07T14:30:00.000Z",
+  "coordinates": "10.0,10.0",
+  "accelerometer": "0.02,9.81,0.15"
+}
