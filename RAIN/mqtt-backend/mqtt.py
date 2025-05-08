@@ -26,7 +26,7 @@ def on_message(client, userdata, msg):
         print(f"Error decoding JSON: {e}")
                 
 
-client = mqtt.Client()
+client = mqtt.Client(transport="websockets")
 
 client.on_connect = on_connect
 client.on_message = on_message
@@ -53,8 +53,7 @@ if __name__ == "__main__":
     
     if mqtt_client:
 
-        subscribe(mqtt_client, "sensor_data")
-
+        subscribe(mqtt_client, "#")
         
         try:
             print("Client is running. Press Ctrl+C to exit.")
