@@ -1,10 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import init from "react_native_mqtt";
 import { Client, Message } from "paho-mqtt";
+import init from "react_native_mqtt";
 
 let client: any;
+let endopoint: string = "100.105.86.53";
+let port: number = 1883;
 
-export const mqttInit = (onMessage: (msg: string) => void) => {
+export const mqttInit = (onMessage: (msg: any) => void) => {
   init({
     size: 10000,
     storageBackend: AsyncStorage,
@@ -15,7 +17,7 @@ export const mqttInit = (onMessage: (msg: string) => void) => {
   });
 
   const clientId = "id_" + parseInt(String(Math.random() * 100000));
-  client = new Client("broker.emqx.io", 8083, "/mqtt", clientId);
+  client = new Client(endopoint, port, "/mqtt", clientId);
 
   client.onConnectionLost = (res: any) => {
     console.log("Connection lost:", res.errorMessage);

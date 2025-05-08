@@ -1,15 +1,19 @@
-import { Image } from "expo-image";
-import { Platform, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 
-import { Collapsible } from "@/components/Collapsible";
-import { ExternalLink } from "@/components/ExternalLink";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { useEffect } from "react";
 import { mqttInit, sendMessage } from "@/lib/mqttService";
 import { Button } from "@react-navigation/elements";
+import { useEffect } from "react";
+
+//tak tip sporočil pošivlaš za vsajga userja pol
+let message = JSON.stringify({
+  user: "60d21b4667d0d8992e610c85",
+  userActivity: "60d21b5c67d0d8992e610c86",
+  date: "2025-05-07T14:30:00.000Z",
+  coordinates: "10.0,10.0",
+  accelerometer: "0.02,9.81,0.15",
+});
 
 export default function TabTwoScreen() {
   useEffect(() => {
@@ -30,22 +34,7 @@ export default function TabTwoScreen() {
         />
       }
     >
-      <Collapsible title="Animations">
-        <Button onPress={() => sendMessage("Hello from Gal")}>
-          Send Message
-        </Button>
-        <ThemedText>
-          This template includes an example of an animated component. The{" "}
-          <ThemedText type="defaultSemiBold">
-            components/HelloWave.tsx
-          </ThemedText>{" "}
-          component uses the powerful{" "}
-          <ThemedText type="defaultSemiBold">
-            react-native-reanimated
-          </ThemedText>{" "}
-          library to create a waving hand animation.
-        </ThemedText>
-      </Collapsible>
+      <Button onPress={() => sendMessage(message)}>Send Message</Button>
     </ParallaxScrollView>
   );
 }
