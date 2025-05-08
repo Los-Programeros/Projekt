@@ -58,7 +58,7 @@ export function AuthForm() {
 
       Toast.show({
         type: "success",
-        text1: "Login successful!",
+        text1: "Login successful! Hello!",
         position: toastPosition,
       });
 
