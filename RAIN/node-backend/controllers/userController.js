@@ -150,12 +150,15 @@ module.exports = {
       req.body.password,
       function (err, user) {
         if (err || !user) {
-          var err = new Error("Wrong username or paassword");
-          err.status = 401;
-          return next(err);
+          return res
+            .status(401)
+            .json({ message: "Wrong username or password" });
         }
+
         req.session.userId = user._id;
-        res.redirect("/users/profile");
+
+        const { _id, username, email } = user;
+        return res.status(200).json({ _id, username, email });
       }
     );
   },
