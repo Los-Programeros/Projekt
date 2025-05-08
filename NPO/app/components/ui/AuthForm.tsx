@@ -9,6 +9,7 @@ import {
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
+import { useUserStore } from "@/store/useUserStore";
 import { Button } from "@react-navigation/elements";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
@@ -37,6 +38,13 @@ export function AuthForm() {
         position: toastPosition,
       });
       return;
+    } else if (!username || !email || !password) {
+      Toast.show({
+        type: "error",
+        text1: "Enter all fields",
+        position: toastPosition,
+      });
+      return;
     }
 
     try {
@@ -48,22 +56,25 @@ export function AuthForm() {
         body: JSON.stringify({ username, email, password }),
       });
 
-      console.log("Response:", response);
+      const responseData = await response.json();
 
       if (!response.ok) {
-        throw new Error("Registration failed");
+        throw new Error(responseData.message || "Registration failed");
       }
+
+      useUserStore.getState().setUser(responseData);
 
       Toast.show({
         type: "success",
         text1: "Registered successfully!",
+        text2: responseData.message || "Welcome!",
         position: toastPosition,
       });
     } catch (err: any) {
       Toast.show({
         type: "error",
         text1: "Registration failed",
-        text2: err.message,
+        text2: err.message || "An error occurred, please try again.",
         position: toastPosition,
       });
     }
