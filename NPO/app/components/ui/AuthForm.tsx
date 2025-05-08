@@ -12,25 +12,61 @@ import { Colors } from "@/constants/Colors";
 import { Button } from "@react-navigation/elements";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
+import Toast from "react-native-toast-message";
 
 export function AuthForm() {
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const toastPosition = Platform.OS === "ios" ? "top" : "bottom";
+
   const [mode, setMode] = useState<"login" | "register">("register");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const onLogin = () => {
-    console.log("Logging in:", { email, password });
+    console.log("Logging in:", { username, email, password });
     // Implement login logic (e.g., Supabase.auth.signInWithPassword)
   };
 
-  const onRegister = () => {
+  const onRegister = async () => {
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      Toast.show({
+        type: "error",
+        text1: "Passwords do not match",
+        position: toastPosition,
+      });
       return;
     }
-    console.log("Registering:", { email, password });
-    // Implement register logic (e.g., Supabase.auth.signUp)
+
+    try {
+      const response = await fetch(`${apiUrl}/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      console.log("Response:", response);
+
+      if (!response.ok) {
+        throw new Error("Registration failed");
+      }
+
+      Toast.show({
+        type: "success",
+        text1: "Registered successfully!",
+        position: toastPosition,
+      });
+    } catch (err: any) {
+      Toast.show({
+        type: "error",
+        text1: "Registration failed",
+        text2: err.message,
+        position: toastPosition,
+      });
+    }
   };
 
   return (
@@ -62,6 +98,18 @@ export function AuthForm() {
           </ThemedText>
           <ThemedView style={styles.formContainer}>
             <ThemedView style={styles.formContainer_inputs}>
+              <ThemedView style={styles.formContainer_inputs_inputGroup}>
+                <ThemedText type="defaultSemiBold">Username</ThemedText>
+                <TextInput
+                  placeholder="Username"
+                  value={username}
+                  onChangeText={setUsername}
+                  style={styles.mainInput}
+                  autoCapitalize="none"
+                  keyboardAppearance="light"
+                />
+              </ThemedView>
+
               <ThemedView style={styles.formContainer_inputs_inputGroup}>
                 <ThemedText type="defaultSemiBold">Email</ThemedText>
                 <TextInput
@@ -152,7 +200,7 @@ const styles = StyleSheet.create({
   loginRegisterContainer: {
     width: "100%",
     backgroundColor: "transparent",
-    gap: 64,
+    gap: 32,
   },
   formContainer: {
     width: "100%",

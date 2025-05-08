@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/Colors";
+import { spacing } from "@/constants/Spacing";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { IconSymbol } from "./ui/IconSymbol";
 
@@ -20,7 +21,7 @@ const styles = StyleSheet.create({
   container: {
     paddingTop: 50,
     paddingBottom: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing.appHorizontalPadding,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
