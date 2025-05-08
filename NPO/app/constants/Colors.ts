@@ -13,6 +13,7 @@ export const Colors = {
   secondaryShade: "#1A659E",
   error: "#FF3C35",
   success: "#35FF4D",
+  white: "#fff",
   light: {
     text: "#1a1a1a",
     background: "#fff",

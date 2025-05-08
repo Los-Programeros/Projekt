@@ -9,6 +9,7 @@ import Animated, {
 
 import { ThemedView } from "@/components/ThemedView";
 import { useBottomTabOverflow } from "@/components/ui/TabBarBackground";
+import { spacing } from "@/constants/Spacing";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -57,7 +58,7 @@ export default function ParallaxScrollView({
         colors={["#151718", "#004E89"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
-        style={StyleSheet.absoluteFill} // Cover full background
+        style={StyleSheet.absoluteFill}
       />
       <Animated.ScrollView
         ref={scrollRef}
@@ -88,11 +89,11 @@ const styles = StyleSheet.create({
   header: {
     height: HEADER_HEIGHT,
     overflow: "hidden",
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.appHorizontalPadding,
   },
   content: {
     flex: 1,
-    padding: 16,
+    padding: spacing.appHorizontalPadding,
     paddingVertical: 32,
     borderTopStartRadius: 16,
     borderEndStartRadius: 16,
