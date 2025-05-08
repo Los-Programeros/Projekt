@@ -19,7 +19,7 @@ export function AuthForm() {
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   const toastPosition = Platform.OS === "ios" ? "top" : "bottom";
 
-  const [mode, setMode] = useState<"login" | "register">("register");
+  const [mode, setMode] = useState<"login" | "register">("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,7 +27,6 @@ export function AuthForm() {
 
   const onLogin = () => {
     console.log("Logging in:", { username, email, password });
-    // Implement login logic (e.g., Supabase.auth.signInWithPassword)
   };
 
   const onRegister = async () => {
