@@ -12,12 +12,14 @@ import { Colors } from "@/constants/Colors";
 import { useUserStore } from "@/store/useUserStore";
 import { Button } from "@react-navigation/elements";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import Toast from "react-native-toast-message";
 
 export function AuthForm() {
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   const toastPosition = Platform.OS === "ios" ? "top" : "bottom";
+  const router = useRouter();
 
   const [mode, setMode] = useState<"login" | "register">("login");
   const [username, setUsername] = useState("");
@@ -25,8 +27,50 @@ export function AuthForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const onLogin = () => {
-    console.log("Logging in:", { username, email, password });
+  const onLogin = async () => {
+    if (!username || !password) {
+      Toast.show({
+        type: "error",
+        text1: "Enter username and password",
+        position: toastPosition,
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`${apiUrl}/users/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({ username, password }),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Invalid username or password");
+      }
+
+      const user = await response.json();
+
+      useUserStore.getState().setUser(user);
+
+      Toast.show({
+        type: "success",
+        text1: "Login successful!",
+        position: toastPosition,
+      });
+
+      router.replace("/profile");
+    } catch (err: any) {
+      Toast.show({
+        type: "error",
+        text1: "Login failed",
+        text2: err.message || "An error occurred",
+        position: toastPosition,
+      });
+    }
   };
 
   const onRegister = async () => {
