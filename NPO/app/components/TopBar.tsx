@@ -35,7 +35,7 @@ export default function TopBar() {
 const styles = StyleSheet.create({
   container: {
     paddingTop: 50,
-    paddingBottom: 10,
+    paddingBottom: 16,
     paddingHorizontal: spacing.appHorizontalPadding,
     flexDirection: "row",
     justifyContent: "space-between",

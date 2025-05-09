@@ -1,7 +1,5 @@
-import { StyleSheet } from "react-native";
-
 import { HelloWave } from "@/components/HelloWave";
-import { MonumentCard } from "@/components/MonumentCard";
+import { LandmarkCard } from "@/components/LandmarkCard";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -15,65 +13,24 @@ export default function HomeScreen() {
       <ThemedView>
         <ThemedText type="title">The Monuments</ThemedText>
       </ThemedView>
-      <ThemedView style={styles.monument_Card_Holder}>
-        <MonumentCard
-          imageUrl={require("@/assets/images/monuments/default.png")}
-          monumentName="Main Square Of Maribor"
-          monumentDescription="There is not much to see at the square. The buildings around it are much more interesting."
-          monumentDistance={1.2}
-          monumentRating={4.5}
+      <ThemedView style={{ marginTop: 16 }}>
+        <LandmarkCard
+          title="Statue of Liberty"
+          subtitle="New York, USA"
+          onPress={() => {}}
         />
-        <MonumentCard
-          imageUrl={require("@/assets/images/monuments/default.png")}
-          monumentName="Main Square Of Maribor"
-          monumentDescription="There is not much to see at the square. The buildings around it are much more interesting."
-          monumentDistance={1.2}
-          monumentRating={4.5}
+        <LandmarkCard
+          title="Eiffel Tower"
+          subtitle="Paris, France"
+          onPress={() => {}}
         />
-        <MonumentCard
-          imageUrl={require("@/assets/images/monuments/default.png")}
-          monumentName="Main Square Of Maribor"
-          monumentDescription="There is not much to see at the square. The buildings around it are much more interesting."
-          monumentDistance={1.2}
-          monumentRating={4.5}
+        <LandmarkCard
+          title="Great Wall of China"
+          subtitle="China"
+          onPress={() => {}}
         />
-        <MonumentCard
-          imageUrl={require("@/assets/images/monuments/default.png")}
-          monumentName="Main Square Of Maribor"
-          monumentDescription="There is not much to see at the square. The buildings around it are much more interesting."
-          monumentDistance={1.2}
-          monumentRating={4.5}
-        />
-        <MonumentCard
-          imageUrl={require("@/assets/images/monuments/default.png")}
-          monumentName="Main Square Of Maribor"
-          monumentDescription="There is not much to see at the square. The buildings around it are much more interesting."
-          monumentDistance={1.2}
-          monumentRating={4.5}
-        />
-        <MonumentCard
-          imageUrl={require("@/assets/images/monuments/default.png")}
-          monumentName="Main Square Of Maribor"
-          monumentDescription="There is not much to see at the square. The buildings around it are much more interesting."
-          monumentDistance={1.2}
-          monumentRating={4.5}
-        />
-        <MonumentCard
-          imageUrl={require("@/assets/images/monuments/default.png")}
-          monumentName="Main Square Of Maribor"
-          monumentDescription="There is not much to see at the square. The buildings around it are much more interesting."
-          monumentDistance={1.2}
-          monumentRating={4.5}
-        />
+        <LandmarkCard title="Machu Picchu" subtitle="Peru" onPress={() => {}} />
       </ThemedView>
     </ParallaxScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  monument_Card_Holder: {
-    flexDirection: "column",
-    marginTop: 16,
-    gap: 16,
-  },
-});
