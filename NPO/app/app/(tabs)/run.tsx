@@ -2,8 +2,10 @@ import { ActivityIndicator, StyleSheet } from "react-native";
 
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedView } from "@/components/ThemedView";
+import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { mqttInit } from "@/lib/mqttService";
+import { Landmark, useRunStore } from "@/store/useRunStore";
 import { Button } from "@react-navigation/elements";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -17,40 +19,43 @@ let message = JSON.stringify({
   accelerometer: "0.02,9.81,0.15",
 });
 
-export default function TabTwoScreen() {
+export default function RunScreen() {
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   const router = useRouter();
+  const setLandmarks = useRunStore((state) => state.setLandmarks);
   const [loading, setLoading] = useState(false);
 
   const startRun = async () => {
     setLoading(true);
     try {
-      // 1. Pridobi vse landmarke
-      const res = await fetch("http://<tvoj-backend>/landmarks");
-      const landmarks = await res.json(); // [{name, coordinates, category}, ...]
-
-      // 2. Shrani v globalni store ali pa pošlji kot param
-      //    tukaj pošljemo kot param JSON.stringify
-      router.push({
-        pathname: "/map",
-        params: { markers: JSON.stringify(landmarks) },
-      });
+      const res = await fetch(`${apiUrl}/landmarks`);
+      const data: Landmark[] = await res.json();
+      setLandmarks(data);
+      router.push("/map");
     } catch (err) {
       console.error(err);
-      // prikaži toast/error - TODO
     } finally {
       setLoading(false);
     }
-  };
 
-  useEffect(() => {
-    mqttInit((msg) => {
-      console.log("Got MQTT message:", msg);
-    });
-  }, []);
+    useEffect(() => {
+      mqttInit((msg) => {
+        console.log("Got MQTT message:", msg);
+      });
+    }, []);
+  };
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: "transparent", dark: "transparent" }}
+      headerBackgroundColor={{ light: "#D0D0D0", dark: "#353636" }}
+      headerImage={
+        <IconSymbol
+          size={310}
+          color="#808080"
+          name="chevron.left.forwardslash.chevron.right"
+          style={styles.headerImage}
+        />
+      }
     >
       {loading ? (
         <ThemedView style={{ flex: 1, justifyContent: "center" }}>

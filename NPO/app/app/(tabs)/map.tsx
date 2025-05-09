@@ -1,12 +1,12 @@
 import { ThemedView } from "@/components/ThemedView";
+import { Landmark, useRunStore } from "@/store/useRunStore";
 import * as Location from "expo-location";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 
-//si že na pravem branchu zdaj samo: SCRUM-32- to: Začetek športne aktivnosti kjer se pokažejo markerji
-
 export default function MapScreen() {
+  const landmarks = useRunStore((state) => state.landmarks);
   const [location, setLocation] =
     useState<Location.LocationObjectCoords | null>(null);
   const [loading, setLoading] = useState(true);
@@ -18,9 +18,8 @@ export default function MapScreen() {
         Alert.alert("Permission denied", "Location permission is required.");
         return;
       }
-
-      let currentLocation = await Location.getCurrentPositionAsync({});
-      setLocation(currentLocation.coords);
+      const loc = await Location.getCurrentPositionAsync({});
+      setLocation(loc.coords);
       setLoading(false);
     })();
   }, []);
@@ -39,28 +38,27 @@ export default function MapScreen() {
       initialRegion={{
         latitude: location.latitude,
         longitude: location.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
       }}
     >
-      <Marker
-        coordinate={{
-          latitude: location.latitude,
-          longitude: location.longitude,
-        }}
-        title="Tukaj si"
-      />
+      <Marker coordinate={location} title="Tukaj si" pinColor="blue" />
+      {landmarks.map((lm: Landmark) => {
+        const [lat, lon] = lm.coordinates.split(",").map(Number);
+        return (
+          <Marker
+            key={lm._id}
+            coordinate={{ latitude: lat, longitude: lon }}
+            title={lm.name}
+            description={lm.category}
+          />
+        );
+      })}
     </MapView>
   );
 }
 
 const styles = StyleSheet.create({
-  map: {
-    flex: 1,
-  },
-  loader: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  map: { flex: 1 },
+  loader: { flex: 1, justifyContent: "center", alignItems: "center" },
 });
