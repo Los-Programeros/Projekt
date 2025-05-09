@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 
+//si že na pravem branchu zdaj samo: SCRUM-32- to: Začetek športne aktivnosti kjer se pokažejo markerji
+
 export default function MapScreen() {
   const [location, setLocation] =
     useState<Location.LocationObjectCoords | null>(null);
