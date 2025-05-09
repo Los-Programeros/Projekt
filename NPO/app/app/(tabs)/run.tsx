@@ -6,7 +6,7 @@ import { mqttInit, sendMessage } from "@/lib/mqttService";
 import { Button } from "@react-navigation/elements";
 import { useEffect } from "react";
 
-//tak tip sporočil pošivlaš za vsajga userja pol
+//tak tip sporočil pošivlaš za vsajga userja pol //pokliči userStore.ts isto ko v profile.tsx pa AuthForm.tsx - user je kr userId
 let message = JSON.stringify({
   user: "60d21b4667d0d8992e610c85",
   userActivity: "60d21b5c67d0d8992e610c86",
