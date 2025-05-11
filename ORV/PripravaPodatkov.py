@@ -9,8 +9,8 @@ base.mkdir(parents=True, exist_ok=True)
 
 poses = [
     "Look straight ahead and press SPACE",
-    "Turn 15° right and press SPACE",
-    "Turn 15° left and press SPACE",
+    "Turn 15 degrees right and press SPACE",
+    "Turn 15 degrees left and press SPACE",
     "Tilt slightly up and press SPACE",
     "Tilt slightly down and press SPACE"
 ]
