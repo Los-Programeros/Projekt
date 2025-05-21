@@ -7,7 +7,7 @@ var logger = require("morgan");
 var mongoose = require("mongoose");
 var mongoHost = "";
 if (process.env.NODE_ENV === "development") {
-  mongoHost = "localhost";
+  mongoHost = "server";
 } else {
   mongoHost = "mongo-container";
 }
