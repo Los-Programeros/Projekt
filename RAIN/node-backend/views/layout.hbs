@@ -1,24 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="sl">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{title}}</title>
-    <link rel="stylesheet" href="/stylesheets/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <nav>
-      <ul>
-        <li><a href="/">Domov</a></li>
-        <li><a href="/admin">Admin Panel</a></li>
-        {{#if session.userId}}
-          <li><a href="/users/profile">Profil</a></li>
-          <li><a href="/users/logout">Odjava</a></li>
-        {{else}}
-          <li><a href="/users/login">Prijava</a></li>
-          <li><a href="/users/register">Registracija</a></li>
-        {{/if}}
-      </ul>
+  <body class="bg-gray-100 text-gray-800 font-sans">
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-20">
+
+          <!-- Left: Logo -->
+          <div class="flex-shrink-0">
+            <a href="/">
+              <img src="/pictures/Logo.jpg" alt="Logo" class="h-16 w-auto">
+            </a>
+          </div>
+
+          <!-- Center: Navigation links -->
+          <div class="flex-1 flex justify-center space-x-8">
+            <a href="/" class="text-black text-lg font-medium hover:text-blue-600 transition">Domov</a>
+            <a href="/admin" class="text-black text-lg font-medium hover:text-blue-600 transition">Admin Panel</a>
+          </div>
+
+          <!-- Right: Auth links -->
+          <div class="flex space-x-4">
+            {{#if session.userId}}
+              <a href="/users/profile" class="text-gray-700 hover:text-blue-700 transition">Profil</a>
+              <a href="/users/logout" class="text-gray-700 hover:text-red-600 transition">Odjava</a>
+            {{else}}
+              <a href="/users/login" class="text-gray-700 hover:text-blue-700 transition">Prijava</a>
+              <a href="/users/register" class="text-gray-700 hover:text-green-600 transition">Registracija</a>
+            {{/if}}
+          </div>
+
+        </div>
+      </div>
     </nav>
 
-    {{{body}}}
+    <!-- Page content -->
+    <main class="p-6 max-w-7xl mx-auto">
+      PROJEKT LOS PROGRAMEROS: HISTORY RUN
+    </main>
+
   </body>
 </html>
