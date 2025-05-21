@@ -184,10 +184,11 @@ module.exports = {
       req.session.destroy(function (err) {
         if (err) {
           return next(err);
-        } else {
-          return res.redirect("/");
         }
+        return res.status(200).json({ message: "Logged out" });
       });
+    } else {
+      return res.status(200).json({ message: "No session to destroy" });
     }
   },
 };
