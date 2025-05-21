@@ -3,7 +3,7 @@ import { Client, Message } from "paho-mqtt";
 import init from "react_native_mqtt";
 
 let client: any;
-let endopoint: string = "100.105.86.53";
+let endopoint: string = "server";
 let port: number = 1883;
 
 export const mqttInit = (onMessage: (msg: any) => void) => {
