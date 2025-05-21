@@ -3,47 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <title>Admin Dashboard</title>
-  <link rel="stylesheet" href="/stylesheets/style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <div class="sidebar">
-    <h2>Users</h2>
-    <ul class="user-list">
-      {{#each users}}
-        <li>{{this.username}}</li>
-      {{/each}}
-    </ul>
-  </div>
+<body class="bg-gray-100 font-sans text-gray-800">
 
-  <div class="main-content">
-    <h1>Admin Overview</h1>
+  <div class="flex min-h-screen">
 
-    <section>
-      <h2>Landmarks</h2>
-      <ul>
-        {{#each landmarks}}
-          <li>{{this.name}} — {{this.coordinates}}</li>
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Users</h2>
+      <ul class="space-y-2">
+        {{#each users}}
+          <li class="hover:bg-gray-200 px-3 py-1 rounded cursor-pointer">
+            {{this.username}}
+          </li>
         {{/each}}
       </ul>
-    </section>
+    </aside>
 
-    <section>
-      <h2>Sensor Data</h2>
-      <ul>
-        {{#each sensorData}}
-          <li>{{this.date}} — {{this.accelerometer}}</li>
-        {{/each}}
-      </ul>
-    </section>
+    <!-- Main content -->
+    <main class="flex-1 p-10 space-y-8">
 
-    <section>
-      <h2>User Activities</h2>
-      <ul>
-        {{#each userActivities}}
-          <li>{{this.date}} — visited: {{this.visited}}</li>
-        {{/each}}
-      </ul>
-    </section>
+      <h1 class="text-3xl font-bold">Admin Overview</h1>
+
+      <!-- Landmarks -->
+      <section class="bg-white p-6 rounded-xl shadow">
+        <h2 class="text-2xl font-semibold mb-4">Landmarks</h2>
+        <ul class="space-y-2">
+          {{#each landmarks}}
+            <li class="border-b pb-2">{{this.name}} — <span class="text-sm text-gray-600">{{this.coordinates}}</span></li>
+          {{/each}}
+        </ul>
+      </section>
+
+      <!-- Sensor Data -->
+      <section class="bg-white p-6 rounded-xl shadow">
+        <h2 class="text-2xl font-semibold mb-4">Sensor Data</h2>
+        <ul class="space-y-2">
+          {{#each sensorData}}
+            <li class="border-b pb-2">{{this.date}} — <span class="text-sm text-gray-600">{{this.accelerometer}}</span></li>
+          {{/each}}
+        </ul>
+      </section>
+
+      <!-- User Activities -->
+      <section class="bg-white p-6 rounded-xl shadow">
+        <h2 class="text-2xl font-semibold mb-4">User Activities</h2>
+        <ul class="space-y-2">
+          {{#each userActivities}}
+            <li class="border-b pb-2">{{this.date}} — visited: <span class="text-sm text-gray-600">{{this.visited}}</span></li>
+          {{/each}}
+        </ul>
+      </section>
+
+    </main>
   </div>
 
   <script src="/javascripts/dashboard.js" defer></script>
