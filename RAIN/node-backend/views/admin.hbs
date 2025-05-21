@@ -1,64 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>Admin Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+  <!-- Z-index fix for Leaflet map -->
+  <style>
+    #map {
+      position: relative;
+      z-index: 0;
+    }
+  </style>
+
+  <!-- Landmarks JSON (vključuje json helper za veljaven JS objekt) -->
+  <script>
+    const landmarks = {{{ json landmarks }}};
+  </script>
 </head>
+
 <body class="bg-gray-100 font-sans text-gray-800">
+  <!-- Navbar -->
+  <nav class="bg-white shadow sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+
+        <!-- Left: Logo -->
+        <div class="flex-shrink-0">
+          <a href="/">
+            <img src="/pictures/Logo.jpg" alt="Logo" class="h-16 w-auto">
+          </a>
+        </div>
+
+        <!-- Center: Navigation links -->
+        <div class="flex-1 flex justify-center space-x-8">
+          <a href="/" class="text-black text-lg font-medium hover:text-blue-600 transition">Domov</a>
+          <a href="/admin" class="text-black text-lg font-medium hover:text-blue-600 transition">Admin Panel</a>
+        </div>
+
+        <!-- Right: Auth links -->
+        <div class="flex space-x-4">
+          {{#if session.userId}}
+          <a href="/users/profile" class="text-gray-700 hover:text-blue-700 transition">Profil</a>
+          <a href="/users/logout" class="text-gray-700 hover:text-red-600 transition">Odjava</a>
+          {{else}}
+          <a href="/users/login" class="text-gray-700 hover:text-blue-700 transition">Prijava</a>
+          <a href="/users/register" class="text-gray-700 hover:text-green-600 transition">Registracija</a>
+          {{/if}}
+        </div>
+
+      </div>
+    </div>
+  </nav>
 
   <div class="flex min-h-screen">
-
     <!-- Sidebar -->
     <aside class="w-64 bg-white shadow-md p-6">
       <h2 class="text-xl font-semibold mb-4">Users</h2>
       <ul class="space-y-2">
         {{#each users}}
-          <li class="hover:bg-gray-200 px-3 py-1 rounded cursor-pointer">
-            {{this.username}}
-          </li>
+        <li class="hover:bg-gray-200 px-3 py-1 rounded cursor-pointer">
+          {{this.username}}
+        </li>
         {{/each}}
       </ul>
     </aside>
 
     <!-- Main content -->
     <main class="flex-1 p-10 space-y-8">
-
       <h1 class="text-3xl font-bold">Admin Overview</h1>
-
-      <!-- Landmarks -->
-      <section class="bg-white p-6 rounded-xl shadow">
-        <h2 class="text-2xl font-semibold mb-4">Landmarks</h2>
-        <ul class="space-y-2">
-          {{#each landmarks}}
-            <li class="border-b pb-2">{{this.name}} — <span class="text-sm text-gray-600">{{this.coordinates}}</span></li>
-          {{/each}}
-        </ul>
-      </section>
 
       <!-- Sensor Data -->
       <section class="bg-white p-6 rounded-xl shadow">
         <h2 class="text-2xl font-semibold mb-4">Sensor Data</h2>
         <ul class="space-y-2">
           {{#each sensorData}}
-            <li class="border-b pb-2">{{this.date}} — <span class="text-sm text-gray-600">{{this.accelerometer}}</span></li>
+          <li class="border-b pb-2">{{this.date}} — <span class="text-sm text-gray-600">{{this.accelerometer}}</span>
+          </li>
           {{/each}}
         </ul>
       </section>
+
+      <!-- Map Section -->
+      <section class="bg-white p-6 rounded-xl shadow">
+        <h2 class="text-2xl font-semibold mb-4">Lokacije na zemljevidu</h2>
+        <div id="map" class="w-full h-[500px] rounded-lg"></div>
+      </section>
+
+      <!-- Landmarks -->
+      <section class="bg-white p-6 rounded-xl shadow">
+        <h2 class="text-2xl font-semibold mb-4">Landmarks</h2>
+        <ul id="landmark-list" class="divide-y divide-gray-200">
+          {{#each landmarks}}
+          <li class="py-2 flex items-center space-x-2 text-gray-700 cursor-pointer hover:bg-gray-100 transition"
+            data-coordinates="{{this.coordinates}}">
+            <span class="text-red-500 text-lg">📍</span>
+            <span class="font-medium">{{this.name}}</span>
+            <span class="text-sm text-gray-500 ml-auto">{{this.coordinates}}</span>
+          </li>
+          {{/each}}
+        </ul>
+      </section>
+
 
       <!-- User Activities -->
       <section class="bg-white p-6 rounded-xl shadow">
         <h2 class="text-2xl font-semibold mb-4">User Activities</h2>
         <ul class="space-y-2">
           {{#each userActivities}}
-            <li class="border-b pb-2">{{this.date}} — visited: <span class="text-sm text-gray-600">{{this.visited}}</span></li>
+          <li class="border-b pb-2">{{this.date}} — visited: <span class="text-sm text-gray-600">{{this.visited}}</span>
+          </li>
           {{/each}}
         </ul>
       </section>
-
     </main>
   </div>
 
+  <!-- Leaflet inicializacija -->
+  <script>
+    const map = L.map('map').setView([46.0569, 14.5058], 8);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap sodelavci'
+    }).addTo(map);
+
+    // Shrani vse markerje po koordinatah
+    const markerMap = {};
+
+    // Ustvari markerje in popupe
+    landmarks.forEach(lm => {
+      const parts = lm.coordinates.split(',').map(s => parseFloat(s.trim()));
+      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        const marker = L.marker(parts).addTo(map)
+          .bindPopup(`<strong>${lm.name}</strong><br>${lm.category || ''}`);
+        markerMap[lm.coordinates] = marker;
+      }
+    });
+
+    // Scroll helper do zemljevida
+    function scrollToMap() {
+      const mapSection = document.getElementById('map');
+      mapSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Klik poslušalec na seznam
+    document.querySelectorAll('#landmark-list li').forEach(item => {
+      item.addEventListener('click', () => {
+        const coords = item.getAttribute('data-coordinates');
+        const parts = coords.split(',').map(s => parseFloat(s.trim()));
+        const marker = markerMap[coords];
+
+        if (marker && parts.length === 2) {
+          map.flyTo(parts, 14, { duration: 1.2 });
+          marker.openPopup();
+          scrollToMap();
+
+          // Vizualna označitev izbrane lokacije
+          document.querySelectorAll('#landmark-list li').forEach(li => li.classList.remove('bg-blue-100'));
+          item.classList.add('bg-blue-100');
+        }
+      });
+    });
+  </script>
+
   <script src="/javascripts/dashboard.js" defer></script>
 </body>
+
 </html>
