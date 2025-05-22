@@ -1,3 +1,4 @@
+import { useUserStore } from "@/store/useUserStore";
 import {
   CameraCapturedPicture,
   CameraView,
@@ -25,7 +26,7 @@ export default function FaceLogin() {
       const photo: CameraCapturedPicture =
         await cameraRef.current.takePictureAsync({
           base64: true,
-          quality: 0.7,
+          quality: 1,
         });
 
       const imageBase64 = photo.base64;
@@ -42,6 +43,8 @@ export default function FaceLogin() {
       const data = await response.json();
 
       if (data.success) {
+        useUserStore.getState().setUser(data.user);
+
         Toast.show({ type: "success", text1: "Face recognized!" });
         router.replace("/profile");
       } else {
@@ -70,7 +73,7 @@ export default function FaceLogin() {
     <View style={styles.container}>
       <CameraView
         style={styles.camera}
-        facing={"front"}
+        facing={"back"}
         ref={cameraRef}
         enableTorch={false}
       >
