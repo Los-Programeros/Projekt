@@ -23,7 +23,8 @@ var usersRouter = require("./routes/userRoutes");
 var landmarksRouter = require("./routes/landmarkRoutes");
 var userActivitiesRouter = require("./routes/userActivityRoutes");
 var sensorDataRouter = require("./routes/sensorDataRoutes");
-var adminRouter = require("./routes/adminRoutes"); // 🚀 added admin routes
+var adminRouter = require("./routes/adminRoutes");
+var faceAuthRouter = require("./routes/faceAuth");
 
 var app = express();
 
@@ -66,7 +67,8 @@ app.use("/users", usersRouter);
 app.use("/landmarks", landmarksRouter);
 app.use("/userActivities", userActivitiesRouter);
 app.use("/sensorData", sensorDataRouter);
-app.use("/admin", adminRouter); // 🚀 mounted admin router
+app.use("/admin", adminRouter);
+app.use("/face-auth", faceAuthRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
