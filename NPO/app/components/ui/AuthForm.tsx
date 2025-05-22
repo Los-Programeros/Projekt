@@ -123,7 +123,9 @@ export function AuthForm() {
     }
   };
 
-  const onLoginWithFaceId = async () => {};
+  const onLoginWithFaceId = () => {
+    router.push("/face-login");
+  };
 
   return (
     <KeyboardAvoidingView
