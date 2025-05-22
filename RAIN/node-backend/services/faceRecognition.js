@@ -23,7 +23,7 @@ module.exports = {
 
       fs.unlinkSync(tempPath);
 
-      return response.data.success;
+      return response.data.verified;
     } catch (err) {
       console.error("Error verifying face:", err);
       return false;
