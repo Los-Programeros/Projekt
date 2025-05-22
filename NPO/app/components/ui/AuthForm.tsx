@@ -123,6 +123,8 @@ export function AuthForm() {
     }
   };
 
+  const onLoginWithFaceId = async () => {};
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -235,6 +237,42 @@ export function AuthForm() {
               </>
             )}
           </ThemedText>
+
+          <ThemedView
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginVertical: 16,
+              backgroundColor: "transparent",
+            }}
+          >
+            <ThemedView
+              style={{ flex: 1, height: 1, backgroundColor: Colors.white }}
+            />
+
+            <ThemedText
+              style={{
+                marginHorizontal: 8,
+                color: Colors.white,
+                backgroundColor: "transparent",
+              }}
+            >
+              Or login with Face IDe
+            </ThemedText>
+
+            <ThemedView
+              style={{ flex: 1, height: 1, backgroundColor: Colors.white }}
+            />
+          </ThemedView>
+
+          <Button
+            variant="filled"
+            color={Colors.primary}
+            style={{ borderRadius: 16, paddingVertical: 16 }}
+            onPress={onLoginWithFaceId}
+          >
+            Login with Face ID
+          </Button>
         </ThemedView>
       </ScrollView>
     </KeyboardAvoidingView>
