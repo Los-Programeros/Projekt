@@ -9,7 +9,7 @@ exports.verifyFace = async (req, res) => {
   const { sessionId, image } = req.body;
 
   try {
-    const isValid = await verifyFaceModel(sessionId, image); // klic na Python model
+    const isValid = await verifyFaceModel(sessionId, image);
     res.json({ success: isValid });
   } catch (err) {
     res.status(500).json({ error: "Verification failed" });
