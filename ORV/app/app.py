@@ -9,7 +9,6 @@ from io import BytesIO
 
 app = Flask(__name__)
 
-# Naloži model
 MODEL_PATH = "2FA_model.keras"
 IMAGE_SIZE = 128
 model = load_model(MODEL_PATH)
