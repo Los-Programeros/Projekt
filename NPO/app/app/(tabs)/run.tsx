@@ -31,9 +31,10 @@ export default function LandmarksListScreen() {
   }
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "transparent", dark: "transparent" }}
-    >
+    <>
+      <ParallaxScrollView
+        headerBackgroundColor={{ light: "transparent", dark: "transparent" }}
+      ></ParallaxScrollView>
       <FlatList
         data={landmarks}
         keyExtractor={(item) => item._id}
@@ -50,7 +51,7 @@ export default function LandmarksListScreen() {
           />
         )}
       />
-    </ParallaxScrollView>
+    </>
   );
 }
 

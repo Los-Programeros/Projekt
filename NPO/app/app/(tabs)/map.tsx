@@ -1,7 +1,9 @@
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
 import * as Location from "expo-location";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, StyleSheet } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 
 type Landmark = {
@@ -18,6 +20,9 @@ export default function MapScreen() {
     longitude: number;
   } | null>(null);
   const [loc, setLoc] = useState<Location.LocationObjectCoords | null>(null);
+  const [routeCoords, setRouteCoords] = useState<
+    { latitude: number; longitude: number }[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [distanceM, setDistanceM] = useState(0);
   const [etaMin, setEtaMin] = useState(0);
@@ -39,29 +44,51 @@ export default function MapScreen() {
       }
       const { coords } = await Location.getCurrentPositionAsync({});
       setLoc(coords);
-      setLoading(false);
     })();
   }, []);
 
   useEffect(() => {
-    if (loc && dest) {
-      const toRad = (deg: number) => (deg * Math.PI) / 180;
-      // Haversine formula
-      const R = 6371000; // meters
-      const dLat = toRad(dest.latitude - loc.latitude);
-      const dLon = toRad(dest.longitude - loc.longitude);
-      const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos(toRad(loc.latitude)) *
-          Math.cos(toRad(dest.latitude)) *
-          Math.sin(dLon / 2) ** 2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const dist = R * c;
-      setDistanceM(dist);
-      // Predpostavimo hitrost 10 km/h -> 2.78 m/s
-      const speed = 2.78;
-      setEtaMin(dist / speed / 60);
-    }
+    const fetchRoute = async () => {
+      if (!loc || !dest) return;
+
+      try {
+        const start: [number, number] = [loc.longitude, loc.latitude];
+        const end: [number, number] = [dest.longitude, dest.latitude];
+
+        const response = await fetch(
+          "https://api.openrouteservice.org/v2/directions/foot-walking/geojson",
+          {
+            method: "POST",
+            headers: {
+              Authorization: process.env
+                .EXPO_PUBLIC_OPENROUTE_API_KEY as string,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ coordinates: [start, end] }),
+          }
+        );
+
+        const json = await response.json();
+
+        const coords = json.features[0].geometry.coordinates.map(
+          ([lon, lat]: [number, number]) => ({
+            latitude: lat,
+            longitude: lon,
+          })
+        );
+
+        setRouteCoords(coords);
+        setDistanceM(json.features[0].properties.summary.distance);
+        setEtaMin(json.features[0].properties.summary.duration / 60);
+      } catch (error) {
+        console.error("ORS route error:", error);
+        Alert.alert("Error", "Failed to fetch route.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRoute();
   }, [loc, dest]);
 
   if (loading || !loc || !dest) {
@@ -79,14 +106,20 @@ export default function MapScreen() {
           longitudeDelta: 0.02,
         }}
       >
-        <Marker coordinate={loc} title="Ti si tukaj" pinColor="blue" />
-        <Marker coordinate={dest} title="Cilj" pinColor="green" />
-        <Polyline coordinates={[loc, dest]} strokeWidth={4} strokeColor="red" />
+        <Marker coordinate={loc} title="You are here" pinColor="blue" />
+        <Marker coordinate={dest} title="Destination" pinColor="green" />
+        {routeCoords.length > 0 && (
+          <Polyline
+            coordinates={routeCoords}
+            strokeWidth={4}
+            strokeColor="red"
+          />
+        )}
       </MapView>
-      <View style={styles.info}>
-        <Text>Razdalja: {(distanceM / 1000).toFixed(2)} km</Text>
-        <Text>Predviden čas: {etaMin.toFixed(1)} min</Text>
-      </View>
+      <ThemedView style={styles.info}>
+        <ThemedText>Distance: {(distanceM / 1000).toFixed(2)} km</ThemedText>
+        <ThemedText>Estimated time: {etaMin.toFixed(1)} min</ThemedText>
+      </ThemedView>
     </>
   );
 }
