@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - SCRUM-50-Avtomatiziranje-namestitve-na-strežnik
 
 jobs:
 
