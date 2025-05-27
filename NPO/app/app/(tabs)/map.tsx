@@ -1,7 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
-import { mqttInit, sendMessage } from "@/lib/mqttService";
+import { sendMessage } from "@/lib/mqttService";
 import { useUserStore } from "@/store/useUserStore";
 import { Landmark, MqttMessage } from "@/types";
 import * as Location from "expo-location";
@@ -55,15 +55,10 @@ export default function MapScreen() {
   const [loading, setLoading] = useState(true);
   const [showCongratulations, setShowCongratulations] = useState(false);
   const [hasReachedDestination, setHasReachedDestination] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
   const mapRef = useRef<MapView>(null);
   const ARRIVAL_THRESHOLD = 20;
-
-  useEffect(() => {
-    mqttInit((msg) => {
-      console.log("Received MQTT message:", msg);
-    });
-  }, []);
 
   useEffect(() => {
     let subscriber: Location.LocationSubscription;
@@ -233,25 +228,28 @@ export default function MapScreen() {
             🎉 Destination Reached! 🎉
           </ThemedText>
         )}
-        <ThemedView style={{ marginTop: 8 }}>
-          <Button
-            title="Start Navigation"
-            color={Colors.primary}
-            onPress={() => {
-              if (mapRef.current && loc) {
-                mapRef.current.animateCamera({
-                  center: {
-                    latitude: loc.latitude,
-                    longitude: loc.longitude,
-                  },
-                  heading: loc.heading || 0,
-                  pitch: 60,
-                  zoom: 18,
-                });
-              }
-            }}
-          />
-        </ThemedView>
+        {!hasStarted && (
+          <ThemedView style={{ marginTop: 8 }}>
+            <Button
+              title="Start Navigation"
+              color={Colors.primary}
+              onPress={() => {
+                if (mapRef.current && loc) {
+                  mapRef.current.animateCamera({
+                    center: {
+                      latitude: loc.latitude,
+                      longitude: loc.longitude,
+                    },
+                    heading: loc.heading || 0,
+                    pitch: 60,
+                    zoom: 18,
+                  });
+                  setHasStarted(true);
+                }
+              }}
+            />
+          </ThemedView>
+        )}
       </ThemedView>
 
       <TouchableOpacity
@@ -303,7 +301,7 @@ const styles = StyleSheet.create({
   map: { flex: 1, marginTop: 100 },
   info: {
     position: "absolute",
-    bottom: 32,
+    bottom: 16,
     left: 16,
     right: 16,
     backgroundColor: Colors.dark.background,
