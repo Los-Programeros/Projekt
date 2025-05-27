@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { Colors } from "@/constants/Colors";
 import { mqttInit, sendMessage } from "@/lib/mqttService";
 import { useUserStore } from "@/store/useUserStore";
 import { Landmark, MqttMessage } from "@/types";
@@ -10,11 +11,34 @@ import {
   ActivityIndicator,
   Alert,
   Button,
+  Modal,
   StyleSheet,
   Text,
   TouchableOpacity,
+  View,
 } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
+
+// Helper function to calculate distance between two coordinates (Haversine formula)
+const calculateDistance = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number => {
+  const R = 6371e3; // Earth's radius in meters
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // Distance in meters
+};
 
 export default function MapScreen() {
   const { landmark } = useLocalSearchParams<{ landmark: string }>();
@@ -29,7 +53,11 @@ export default function MapScreen() {
   const [distanceM, setDistanceM] = useState(0);
   const [etaMin, setEtaMin] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showCongratulations, setShowCongratulations] = useState(false);
+  const [hasReachedDestination, setHasReachedDestination] = useState(false);
+
   const mapRef = useRef<MapView>(null);
+  const ARRIVAL_THRESHOLD = 20;
 
   useEffect(() => {
     mqttInit((msg) => {
@@ -85,6 +113,22 @@ export default function MapScreen() {
       setDest({ latitude: lat, longitude: lon });
     }
   }, [landmark]);
+
+  useEffect(() => {
+    if (loc && dest && !hasReachedDestination) {
+      const distanceToDestination = calculateDistance(
+        loc.latitude,
+        loc.longitude,
+        dest.latitude,
+        dest.longitude
+      );
+
+      if (distanceToDestination <= ARRIVAL_THRESHOLD) {
+        setHasReachedDestination(true);
+        setShowCongratulations(true);
+      }
+    }
+  }, [loc, dest, hasReachedDestination]);
 
   useEffect(() => {
     const fetchRoute = async () => {
@@ -181,31 +225,41 @@ export default function MapScreen() {
       </MapView>
 
       <ThemedView style={styles.info}>
-        <ThemedText style={{ color: "black" }}>
+        <ThemedText style={{ color: Colors.white }}>
           Distance: {(distanceM / 1000).toFixed(2)} km
         </ThemedText>
-        <ThemedText style={{ color: "black" }}>
+        <ThemedText style={{ color: Colors.white }}>
           ETA: {etaMin.toFixed(1)} min
         </ThemedText>
-        <ThemedText style={{ color: "black" }}>
+        <ThemedText style={{ color: Colors.white }}>
           Speed: {((loc.speed ?? 0) * 3.6).toFixed(1)} km/h
         </ThemedText>
-        <Button
-          title="Start Navigation"
-          onPress={() => {
-            if (mapRef.current && loc) {
-              mapRef.current.animateCamera({
-                center: {
-                  latitude: loc.latitude,
-                  longitude: loc.longitude,
-                },
-                heading: loc.heading || 0,
-                pitch: 60,
-                zoom: 18,
-              });
-            }
-          }}
-        />
+        {hasReachedDestination && (
+          <ThemedText
+            style={{ color: Colors.primary, fontWeight: "bold", marginTop: 8 }}
+          >
+            🎉 Destination Reached! 🎉
+          </ThemedText>
+        )}
+        <ThemedView style={{ marginTop: 8 }}>
+          <Button
+            title="Start Navigation"
+            color={Colors.primary}
+            onPress={() => {
+              if (mapRef.current && loc) {
+                mapRef.current.animateCamera({
+                  center: {
+                    latitude: loc.latitude,
+                    longitude: loc.longitude,
+                  },
+                  heading: loc.heading || 0,
+                  pitch: 60,
+                  zoom: 18,
+                });
+              }
+            }}
+          />
+        </ThemedView>
       </ThemedView>
 
       <TouchableOpacity
@@ -223,6 +277,32 @@ export default function MapScreen() {
       >
         <Text style={styles.buttonText}>📍</Text>
       </TouchableOpacity>
+
+      {/* Congratulations Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showCongratulations}
+        onRequestClose={() => setShowCongratulations(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.congratsTitle}>🎉 Congratulations! 🎉</Text>
+            <Text style={styles.congratsMessage}>
+              You have successfully reached your destination!
+            </Text>
+            <Text style={styles.congratsSubtext}>
+              Great job completing your journey!
+            </Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowCongratulations(false)}
+            >
+              <Text style={styles.closeButtonText}>Awesome!</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -234,7 +314,8 @@ const styles = StyleSheet.create({
     bottom: 32,
     left: 16,
     right: 16,
-    backgroundColor: "rgba(255,255,255,0.95)",
+    backgroundColor: Colors.dark.background,
+    color: Colors.white,
     padding: 12,
     borderRadius: 8,
     elevation: 3,
@@ -250,5 +331,56 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 18,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    padding: 30,
+    borderRadius: 20,
+    alignItems: "center",
+    margin: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  congratsTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: Colors.primary,
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  congratsMessage: {
+    fontSize: 18,
+    textAlign: "center",
+    marginBottom: 10,
+    color: "#333",
+  },
+  congratsSubtext: {
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 25,
+    color: "#666",
+  },
+  closeButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  closeButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
