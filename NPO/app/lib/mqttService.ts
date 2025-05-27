@@ -4,7 +4,7 @@ import init from "react_native_mqtt";
 
 let client: any;
 let mqttendopoint: string = process.env.EXPO_PUBLIC_MQTT_BROKER_URL || "server";
-let port: number = 9001;
+let port: number = 1883;
 
 export const mqttInit = (onMessage: (msg: any) => void) => {
   init({
@@ -17,7 +17,7 @@ export const mqttInit = (onMessage: (msg: any) => void) => {
   });
 
   const clientId = "id_" + parseInt(String(Math.random() * 100000));
-  client = new Client("js-laptop", 1883, "/mqtt");
+  client = new Client("server", 1883, "/mqtt");
 
   client.onConnectionLost = (res: any) => {
     console.log("Connection lost:", res.errorMessage, clientId);

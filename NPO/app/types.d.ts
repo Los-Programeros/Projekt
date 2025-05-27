@@ -12,15 +12,18 @@ export type Landmark = {
 };
 
 export type UserActivity = {
+  _id: string;
   user: User;
-  date: string;
-  visited: Landmark[];
+  visited: {
+    landmark: Landmark;
+    visitedAt: string;
+  }[];
 };
 
 export type MqttMessage = {
   user: User._id;
   date: string;
-  userActivity?: UserActivity;
+  userActivity?: UserActivity._id;
   coordinates: string;
   speed?: number | null;
 };

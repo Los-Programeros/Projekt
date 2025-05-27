@@ -49,8 +49,6 @@ export default function MapScreen() {
           const coords = location.coords;
           setLoc(coords);
 
-          console.log(useUserStore.getState().user?._id);
-
           const mqttMessage: MqttMessage = {
             user: useUserStore.getState().user?._id,
             date: new Date().toISOString(),

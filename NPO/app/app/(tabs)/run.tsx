@@ -1,9 +1,17 @@
 import { LandmarkCard } from "@/components/LandmarkCard";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { Colors } from "@/constants/Colors";
+import { useUserStore } from "@/store/useUserStore";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, StyleSheet } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Platform,
+  StyleSheet,
+  ToastAndroid,
+} from "react-native";
 
 type Landmark = {
   _id: string;
@@ -42,12 +50,48 @@ export default function LandmarksListScreen() {
           <LandmarkCard
             title={item.name}
             subtitle={item.category}
-            onPress={() =>
-              router.push({
-                pathname: "/map",
-                params: { landmark: JSON.stringify(item) },
-              })
-            }
+            onPress={async () => {
+              const user = useUserStore.getState().user;
+
+              if (!user) {
+                if (Platform.OS === "android") {
+                  ToastAndroid.show("Please login first", ToastAndroid.SHORT);
+                } else {
+                  Alert.alert("Login required", "Please login first");
+                }
+                return;
+              }
+
+              try {
+                const response = await fetch(
+                  `${process.env.EXPO_PUBLIC_API_URL}/userActivities`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      userId: user._id,
+                      visited: item._id,
+                    }),
+                  }
+                );
+
+                const createdActivity = await response.json();
+
+                useUserStore.getState().setUserActivity({
+                  ...createdActivity,
+                  user,
+                });
+
+                router.push({
+                  pathname: "/map",
+                  params: { landmark: JSON.stringify(item) },
+                });
+              } catch (err) {
+                console.error("Failed to create activity", err);
+              }
+            }}
           />
         )}
       />
