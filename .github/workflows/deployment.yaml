@@ -39,6 +39,7 @@ jobs:
         uses: garygrossgarten/github-action-ssh@release
         with:
           command: |
+            cd ./deployment/
             bash server-clean.sh
             bash server-setup.sh
           host: ${{ secrets.SERVER_URL }}
