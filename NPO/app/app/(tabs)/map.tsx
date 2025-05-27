@@ -1,17 +1,13 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { mqttInit, sendMessage } from "@/lib/mqttService";
+import { useUserStore } from "@/store/useUserStore";
+import { Landmark, MqttMessage } from "@/types";
 import * as Location from "expo-location";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
-
-type Landmark = {
-  _id: string;
-  name: string;
-  coordinates: string; // "lat,lon"
-  category: string;
-};
 
 export default function MapScreen() {
   const { landmark } = useLocalSearchParams<{ landmark: string }>();
@@ -28,24 +24,60 @@ export default function MapScreen() {
   const [etaMin, setEtaMin] = useState(0);
 
   useEffect(() => {
+    mqttInit((msg) => {
+      console.log("Received MQTT message in HomeScreen:", msg);
+    });
+  }, []);
+
+  useEffect(() => {
+    let subscriber: Location.LocationSubscription;
+
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission denied", "Location permission is required.");
+        return;
+      }
+
+      subscriber = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 500,
+          distanceInterval: 2,
+        },
+        (location) => {
+          const coords = location.coords;
+          setLoc(coords);
+
+          console.log(useUserStore.getState().user?._id);
+
+          const mqttMessage: MqttMessage = {
+            user: useUserStore.getState().user?._id,
+            date: new Date().toISOString(),
+            userActivity: useUserStore.getState().userActivity?._id,
+            coordinates: `${coords.latitude},${coords.longitude}`,
+            speed: coords.speed,
+          };
+
+          sendMessage(JSON.stringify(mqttMessage));
+        }
+      );
+    })();
+
+    return () => {
+      if (subscriber) {
+        subscriber.remove();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (landmark) {
       const lm: Landmark = JSON.parse(landmark);
       const [lat, lon] = lm.coordinates.split(",").map(Number);
       setDest({ latitude: lat, longitude: lon });
     }
   }, [landmark]);
-
-  useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Permission denied", "Location permission is required.");
-        return;
-      }
-      const { coords } = await Location.getCurrentPositionAsync({});
-      setLoc(coords);
-    })();
-  }, []);
 
   useEffect(() => {
     const fetchRoute = async () => {
@@ -117,8 +149,12 @@ export default function MapScreen() {
         )}
       </MapView>
       <ThemedView style={styles.info}>
-        <ThemedText>Distance: {(distanceM / 1000).toFixed(2)} km</ThemedText>
-        <ThemedText>Estimated time: {etaMin.toFixed(1)} min</ThemedText>
+        <ThemedText style={{ color: "black" }}>
+          Distance: {(distanceM / 1000).toFixed(2)} km
+        </ThemedText>
+        <ThemedText style={{ color: "black" }}>
+          Estimated time: {etaMin.toFixed(1)} min
+        </ThemedText>
       </ThemedView>
     </>
   );
