@@ -1,16 +1,23 @@
-var mongoose = require("mongoose");
-var Schema = mongoose.Schema;
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-var userActivitySchema = new Schema({
+const userActivitySchema = new Schema({
   user: {
     type: Schema.Types.ObjectId,
     ref: "user",
+    required: true,
   },
-  date: Date,
   visited: [
     {
-      type: Schema.Types.ObjectId,
-      ref: "landmark",
+      landmark: {
+        type: Schema.Types.ObjectId,
+        ref: "landmark",
+        required: true,
+      },
+      visitedAt: {
+        type: Date,
+        default: Date.now,
+      },
     },
   ],
 });
