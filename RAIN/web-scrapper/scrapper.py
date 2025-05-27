@@ -29,7 +29,7 @@ with open('landmarks.csv', mode='w', newline='', encoding='utf-8') as file:
 
     for landmark in landmarks:
         name = landmark.text.strip()
-        coordinates = geocode(name)
+        coordinates = geocode(f"{name} Maribor")
         print(f"{name}: {coordinates}")
         
         if coordinates != "-,-":
