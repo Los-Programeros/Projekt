@@ -3,7 +3,7 @@ import time
 import requests
 import json
 
-api = "http://localhost:3000/sensorData"
+node_endpoint = "http://node-container:3000/sensorData"
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
@@ -16,7 +16,7 @@ def on_message(client, userdata, msg):
     print(f"{msg.topic}: {message}")
     try:
         message_dict = json.loads(message)
-        response = requests.post(api, headers={'Content-Type': 'application/json'}, json=message_dict)
+        response = requests.post(node_endpoint, headers={'Content-Type': 'application/json'}, json=message_dict)
         print(response.status_code)
         if response.status_code == 200 or response.status_code == 201:
             print("Uspešno poslal")
@@ -31,7 +31,7 @@ client = mqtt.Client(transport="websockets")
 client.on_connect = on_connect
 client.on_message = on_message
 
-def connect_mqtt(broker="localhost", port=1883, username=None, password=None):
+def connect_mqtt(broker, port, username=None, password=None):
     if username and password:
         client.username_pw_set(username, password)
     
@@ -49,7 +49,7 @@ def subscribe(client, topic):
 
 if __name__ == "__main__":
 
-    mqtt_client = connect_mqtt(broker="localhost", port=1883)
+    mqtt_client = connect_mqtt(broker="mosquitto-container", port=1883)
     
     if mqtt_client:
 
