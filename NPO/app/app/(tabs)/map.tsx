@@ -206,14 +206,6 @@ export default function MapScreen() {
         showsUserLocation={true}
         followsUserLocation={true}
       >
-        <Marker
-          coordinate={loc}
-          title="You are here"
-          pinColor="blue"
-          rotation={loc.heading || 0}
-          anchor={{ x: 0.5, y: 0.5 }}
-          flat
-        />
         <Marker coordinate={dest} title="Destination" pinColor="green" />
         {routeCoords.length > 0 && (
           <Polyline
@@ -308,7 +300,7 @@ export default function MapScreen() {
 }
 
 const styles = StyleSheet.create({
-  map: { flex: 1 },
+  map: { flex: 1, marginTop: 100 },
   info: {
     position: "absolute",
     bottom: 32,
@@ -322,9 +314,9 @@ const styles = StyleSheet.create({
   },
   recenterButton: {
     position: "absolute",
-    top: 100,
-    right: 16,
-    backgroundColor: "#fff",
+    top: 160,
+    right: 12,
+    backgroundColor: Colors.white,
     padding: 10,
     borderRadius: 30,
     elevation: 4,
