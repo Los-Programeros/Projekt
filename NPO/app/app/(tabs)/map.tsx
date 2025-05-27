@@ -5,8 +5,15 @@ import { useUserStore } from "@/store/useUserStore";
 import { Landmark, MqttMessage } from "@/types";
 import * as Location from "expo-location";
 import { useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Button,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+} from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 
 export default function MapScreen() {
@@ -19,13 +26,14 @@ export default function MapScreen() {
   const [routeCoords, setRouteCoords] = useState<
     { latitude: number; longitude: number }[]
   >([]);
-  const [loading, setLoading] = useState(true);
   const [distanceM, setDistanceM] = useState(0);
   const [etaMin, setEtaMin] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const mapRef = useRef<MapView>(null);
 
   useEffect(() => {
     mqttInit((msg) => {
-      console.log("Received MQTT message in HomeScreen:", msg);
+      console.log("Received MQTT message:", msg);
     });
   }, []);
 
@@ -44,6 +52,7 @@ export default function MapScreen() {
           accuracy: Location.Accuracy.High,
           timeInterval: 500,
           distanceInterval: 2,
+          mayShowUserSettingsDialog: true,
         },
         (location) => {
           const coords = location.coords;
@@ -121,6 +130,20 @@ export default function MapScreen() {
     fetchRoute();
   }, [loc, dest]);
 
+  useEffect(() => {
+    if (mapRef.current && loc) {
+      mapRef.current.animateCamera({
+        center: {
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+        },
+        heading: loc.heading || 0,
+        pitch: 45,
+        zoom: 17,
+      });
+    }
+  }, [loc]);
+
   if (loading || !loc || !dest) {
     return <ActivityIndicator style={{ flex: 1 }} size="large" />;
   }
@@ -128,6 +151,7 @@ export default function MapScreen() {
   return (
     <>
       <MapView
+        ref={mapRef}
         style={styles.map}
         initialRegion={{
           latitude: loc.latitude,
@@ -135,8 +159,17 @@ export default function MapScreen() {
           latitudeDelta: 0.02,
           longitudeDelta: 0.02,
         }}
+        showsUserLocation={true}
+        followsUserLocation={true}
       >
-        <Marker coordinate={loc} title="You are here" pinColor="blue" />
+        <Marker
+          coordinate={loc}
+          title="You are here"
+          pinColor="blue"
+          rotation={loc.heading || 0}
+          anchor={{ x: 0.5, y: 0.5 }}
+          flat
+        />
         <Marker coordinate={dest} title="Destination" pinColor="green" />
         {routeCoords.length > 0 && (
           <Polyline
@@ -146,14 +179,50 @@ export default function MapScreen() {
           />
         )}
       </MapView>
+
       <ThemedView style={styles.info}>
         <ThemedText style={{ color: "black" }}>
           Distance: {(distanceM / 1000).toFixed(2)} km
         </ThemedText>
         <ThemedText style={{ color: "black" }}>
-          Estimated time: {etaMin.toFixed(1)} min
+          ETA: {etaMin.toFixed(1)} min
         </ThemedText>
+        <ThemedText style={{ color: "black" }}>
+          Speed: {((loc.speed ?? 0) * 3.6).toFixed(1)} km/h
+        </ThemedText>
+        <Button
+          title="Start Navigation"
+          onPress={() => {
+            if (mapRef.current && loc) {
+              mapRef.current.animateCamera({
+                center: {
+                  latitude: loc.latitude,
+                  longitude: loc.longitude,
+                },
+                heading: loc.heading || 0,
+                pitch: 60,
+                zoom: 18,
+              });
+            }
+          }}
+        />
       </ThemedView>
+
+      <TouchableOpacity
+        style={styles.recenterButton}
+        onPress={() => {
+          if (mapRef.current && loc) {
+            mapRef.current.animateToRegion({
+              latitude: loc.latitude,
+              longitude: loc.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            });
+          }
+        }}
+      >
+        <Text style={styles.buttonText}>📍</Text>
+      </TouchableOpacity>
     </>
   );
 }
@@ -165,8 +234,21 @@ const styles = StyleSheet.create({
     bottom: 32,
     left: 16,
     right: 16,
-    backgroundColor: "rgba(255,255,255,0.9)",
+    backgroundColor: "rgba(255,255,255,0.95)",
     padding: 12,
     borderRadius: 8,
+    elevation: 3,
+  },
+  recenterButton: {
+    position: "absolute",
+    top: 100,
+    right: 16,
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 30,
+    elevation: 4,
+  },
+  buttonText: {
+    fontSize: 18,
   },
 });
