@@ -1,5 +1,7 @@
 #!/bin/bash
 
+docker network create backend-net
+
 set -euo pipefail
 
 mosquitto="NPO/mosquitto"
