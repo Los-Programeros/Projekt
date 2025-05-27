@@ -2,7 +2,7 @@ import csv
 import requests
 import json
 
-api = "http://localhost:3000/landmarks"
+api = "http://server:3000/landmarks"
 
 with open('landmarks.csv', newline='', encoding='utf-8') as csvfile:
     reader = csv.DictReader(csvfile)
