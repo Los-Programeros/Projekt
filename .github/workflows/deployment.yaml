@@ -1,0 +1,46 @@
+name: Auto Server Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  server-upload:
+    name: Server upload
+    runs-on: self-hosted
+    steps:
+    - name: Get project from Github
+      uses: actions/checkout@v4
+    
+    - name: Upload files
+      uses: Dylan700/sftp-upload-action@latest
+      with:
+        server: ${{ secrets.SERVER_URL }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        uploads: |
+          ./ => ./deployment/
+        ignore: |
+            NPO/app/**
+            NPO/app/
+            RAIN/web-scrapper/**
+            RAIN/web-scrapper/
+
+  server-setup:
+    name: Server setup
+    runs-on: self-hosted
+    needs: server-upload
+    steps:
+
+      - name: Clean and setup containers
+        uses: garygrossgarten/github-action-ssh@release
+        with:
+          command: |
+            cd ./deployment/
+            bash server-clean.sh
+            bash server-setup.sh
+          host: ${{ secrets.SERVER_URL }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
