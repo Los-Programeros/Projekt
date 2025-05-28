@@ -12,12 +12,20 @@ import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 import TopBar from "@/components/TopBar";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { mqttInit } from "@/lib/mqttService";
+import { useEffect } from "react";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+    Figtree: require("../assets/fonts/Figtree-Regular.ttf"),
   });
+
+  useEffect(() => {
+    mqttInit((msg) => {
+      console.log("Received MQTT message in HomeScreen:", msg);
+    });
+  }, []);
 
   if (!loaded) {
     // Async font loading only occurs in development.

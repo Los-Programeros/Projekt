@@ -1,19 +1,18 @@
+import { User, UserActivity } from "@/types";
 import { create } from "zustand";
-
-type User = {
-  id: string;
-  username: string;
-  email: string;
-};
 
 type UserStore = {
   user: User | null;
+  userActivity: UserActivity | null;
   setUser: (user: User) => void;
+  setUserActivity: (activity: UserActivity) => void;
   clearUser: () => void;
 };
 
 export const useUserStore = create<UserStore>((set) => ({
   user: null,
+  userActivity: null,
   setUser: (user) => set({ user }),
-  clearUser: () => set({ user: null }),
+  setUserActivity: (activity) => set({ userActivity: activity }),
+  clearUser: () => set({ user: null, userActivity: null }),
 }));

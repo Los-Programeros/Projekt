@@ -3,7 +3,7 @@ import { Client, Message } from "paho-mqtt";
 import init from "react_native_mqtt";
 
 let client: any;
-let endopoint: string = "server";
+let mqttendopoint: string = process.env.EXPO_PUBLIC_MQTT_BROKER_URL || "server";
 let port: number = 1883;
 
 export const mqttInit = (onMessage: (msg: any) => void) => {
@@ -17,10 +17,10 @@ export const mqttInit = (onMessage: (msg: any) => void) => {
   });
 
   const clientId = "id_" + parseInt(String(Math.random() * 100000));
-  client = new Client(endopoint, port, "/mqtt", clientId);
+  client = new Client("server", 1883, "/mqtt");
 
   client.onConnectionLost = (res: any) => {
-    console.log("Connection lost:", res.errorMessage);
+    console.log("Connection lost:", res.errorMessage, clientId);
   };
 
   client.onMessageArrived = (message: any) => {
