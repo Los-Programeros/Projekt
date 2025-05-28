@@ -18,7 +18,7 @@ import { useEffect } from "react";
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+    Figtree: require("../assets/fonts/Figtree-Regular.ttf"),
   });
 
   useEffect(() => {

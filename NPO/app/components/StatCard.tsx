@@ -9,8 +9,6 @@ import { ThemedView } from "./ThemedView";
 export function StatCard() {
   const user = useUserStore((state) => state.user);
 
-  console.log("StatCard user:", user);
-
   if (!user) {
     return (
       <ThemedView style={styles.card_container}>
@@ -26,7 +24,7 @@ export function StatCard() {
           <TouchableOpacity onPress={() => router.push("/profile")}>
             <ThemedText
               type="link"
-              style={{ color: "white", fontWeight: "600" }}
+              style={{ color: "white", fontWeight: "800" }}
             >
               Log In
             </ThemedText>
@@ -44,9 +42,81 @@ export function StatCard() {
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      <ThemedText type="title" style={{ color: Colors.white }}>
-        Welcome, {user.username}!
-      </ThemedText>
+      <View style={{ justifyContent: "center", alignItems: "center" }}>
+        <ThemedText type="title" style={{ color: Colors.white, fontSize: 32 }}>
+          Hi, {user.username}!
+        </ThemedText>
+        <ThemedText
+          type="default"
+          style={{
+            color: Colors.white,
+            marginTop: 8,
+            fontSize: 16,
+            fontWeight: "800",
+          }}
+        >
+          Your progress:
+        </ThemedText>
+      </View>
+      <View
+        style={{
+          flexDirection: "row",
+          marginTop: 16,
+          gap: 32,
+          justifyContent: "space-between",
+        }}
+      >
+        <View>
+          <ThemedText type="default" style={{ fontWeight: 800 }}>
+            Ran
+          </ThemedText>
+          <View
+            style={{ flexDirection: "row", alignItems: "flex-end", gap: 4 }}
+          >
+            <ThemedText
+              type="default"
+              style={{ fontSize: 32, fontWeight: 800 }}
+            >
+              30000
+            </ThemedText>
+            <ThemedText style={{ fontSize: 16, fontWeight: 800 }}>
+              km
+            </ThemedText>
+          </View>
+        </View>
+        <View>
+          <ThemedText type="default" style={{ fontWeight: 800 }}>
+            Monuments count
+          </ThemedText>
+          <View
+            style={{ flexDirection: "row", alignItems: "flex-end", gap: 4 }}
+          >
+            <ThemedText
+              type="default"
+              style={{ fontSize: 32, fontWeight: 800 }}
+            >
+              12
+            </ThemedText>
+            <ThemedText style={{ fontSize: 16, fontWeight: "800" }}>
+              sites
+            </ThemedText>
+          </View>
+        </View>
+      </View>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <TouchableOpacity onPress={() => router.push("/profile")}>
+          <ThemedText
+            type="link"
+            style={{
+              color: "white",
+              fontWeight: "800",
+              textDecorationLine: "underline",
+            }}
+          >
+            Your Profile
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
     </ThemedView>
   );
 }
