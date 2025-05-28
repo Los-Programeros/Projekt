@@ -5,8 +5,8 @@ import { sendMessage } from "@/lib/mqttService";
 import { useUserStore } from "@/store/useUserStore";
 import { Landmark, MqttMessage } from "@/types";
 import * as Location from "expo-location";
-import { useLocalSearchParams } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -56,9 +56,26 @@ export default function MapScreen() {
   const [showCongratulations, setShowCongratulations] = useState(false);
   const [hasReachedDestination, setHasReachedDestination] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const [isFinishedRun, setIsFinishedRun] = useState(false);
 
   const mapRef = useRef<MapView>(null);
   const ARRIVAL_THRESHOLD = 20;
+
+  const resetMapState = useCallback(() => {
+    setRouteCoords([]);
+    setDistanceM(0);
+    setEtaMin(0);
+    setShowCongratulations(false);
+    setHasReachedDestination(false);
+    setHasStarted(false);
+    setIsFinishedRun(false);
+  }, []);
+
+  useEffect(() => {
+    if (landmark) {
+      resetMapState();
+    }
+  }, [landmark, resetMapState]);
 
   useEffect(() => {
     let subscriber: Location.LocationSubscription;
@@ -121,6 +138,7 @@ export default function MapScreen() {
       if (distanceToDestination <= ARRIVAL_THRESHOLD) {
         setHasReachedDestination(true);
         setShowCongratulations(true);
+        setIsFinishedRun(true);
       }
     }
   }, [loc, dest, hasReachedDestination]);
@@ -183,6 +201,11 @@ export default function MapScreen() {
     }
   }, [loc]);
 
+  const startNewRun = () => {
+    resetMapState();
+    router.push("/run");
+  };
+
   if (loading || !loc || !dest) {
     return <ActivityIndicator style={{ flex: 1 }} size="large" />;
   }
@@ -228,7 +251,7 @@ export default function MapScreen() {
             🎉 Destination Reached! 🎉
           </ThemedText>
         )}
-        {!hasStarted && (
+        {!hasStarted && !isFinishedRun && (
           <ThemedView style={{ marginTop: 8 }}>
             <Button
               title="Start Navigation"
@@ -246,6 +269,17 @@ export default function MapScreen() {
                   });
                   setHasStarted(true);
                 }
+              }}
+            />
+          </ThemedView>
+        )}
+        {isFinishedRun && (
+          <ThemedView style={{ marginTop: 8 }}>
+            <Button
+              title="Start new run"
+              color={Colors.primary}
+              onPress={() => {
+                startNewRun();
               }}
             />
           </ThemedView>
