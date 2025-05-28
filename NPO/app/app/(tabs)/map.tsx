@@ -2,6 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { sendMessage } from "@/lib/mqttService";
+import { useRunStore } from "@/store/useRunStore";
 import { useUserStore } from "@/store/useUserStore";
 import { Landmark, MqttMessage } from "@/types";
 import * as Location from "expo-location";
@@ -41,6 +42,7 @@ const calculateDistance = (
 };
 
 export default function MapScreen() {
+  const { landmarks } = useRunStore();
   const { landmark } = useLocalSearchParams<{ landmark: string }>();
   const [dest, setDest] = useState<{
     latitude: number;

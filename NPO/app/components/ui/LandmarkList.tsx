@@ -1,7 +1,7 @@
 import { LandmarkCard } from "@/components/LandmarkCard";
 import { Colors } from "@/constants/Colors";
+import { useRunStore } from "@/store/useRunStore";
 import { useUserStore } from "@/store/useUserStore";
-import { Landmark } from "@/types";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -15,17 +15,23 @@ import {
 
 export function LandmarksList() {
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-  const [landmarks, setLandmarks] = useState<Landmark[]>([]);
+  const { landmarks, setLandmarks } = useRunStore();
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    fetch(`${apiUrl}/landmarks`)
-      .then((res) => res.json())
-      .then((data) => setLandmarks(data))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+    if (landmarks.length === 0) {
+      fetch(`${apiUrl}/landmarks`)
+        .then((res) => res.json())
+        .then((data) => {
+          setLandmarks(data);
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [landmarks.length, setLandmarks]);
 
   if (loading) {
     return <ActivityIndicator style={{ flex: 1 }} size="large" />;
