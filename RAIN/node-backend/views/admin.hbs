@@ -19,6 +19,24 @@
       z-index: 0;
     }
   </style>
+  <script>
+    document.querySelectorAll("aside li[data-username]").forEach(userItem => {
+      userItem.addEventListener("click", () => {
+        const selectedUsername = userItem.getAttribute("data-username");
+
+        // Označi izbranega
+        document.querySelectorAll("aside li").forEach(li => li.classList.remove("bg-gray-300"));
+        userItem.classList.add("bg-gray-300");
+
+        // Prikaži samo vrstico z ujemajočim se username
+        document.querySelectorAll("#sensor-table-body tr").forEach(row => {
+          const rowUser = row.getAttribute("data-username");
+          row.style.display = (rowUser === selectedUsername) ? "" : "none";
+        });
+      });
+    });
+  </script>
+
 
   <!-- Landmarks JSON (vključuje json helper za veljaven JS objekt) -->
   <script>
@@ -54,7 +72,7 @@
       <h2 class="text-xl font-semibold mb-4">Users</h2>
       <ul class="space-y-2">
         {{#each users}}
-        <li class="hover:bg-gray-200 px-3 py-1 rounded cursor-pointer">
+        <li class="hover:bg-gray-200 px-3 py-1 rounded cursor-pointer" data-username="{{this.username}}">
           {{this.username}}
         </li>
         {{/each}}
@@ -66,14 +84,26 @@
       <h1 class="text-3xl font-bold">Admin Overview</h1>
 
       <!-- Sensor Data -->
-      <section class="bg-white p-6 rounded-xl shadow">
+      <section class="bg-white p-6 rounded-xl shadow max-w-3xl">
         <h2 class="text-2xl font-semibold mb-4">Sensor Data</h2>
-        <ul class="space-y-2">
-          {{#each sensorData}}
-          <li class="border-b pb-2">{{this.date}} — <span class="text-sm text-gray-600">{{this.accelerometer}}</span>
-          </li>
-          {{/each}}
-        </ul>
+        <div class="overflow-y-auto max-h-64 border rounded-lg">
+          <table class="min-w-full text-sm text-left text-gray-700">
+            <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+              <tr>
+                <th scope="col" class="px-4 py-2">Date</th>
+                <th scope="col" class="px-4 py-2">Accelerometer</th>
+              </tr>
+            </thead>
+            <tbody id="sensor-table-body">
+              {{#each sensorData}}
+              <tr class="border-b hover:bg-gray-50" data-username="{{this.username}}">
+                <td class="px-4 py-2">{{this.date}}</td>
+                <td class="px-4 py-2">{{this.accelerometer}}</td>
+              </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <!-- Map Section -->
@@ -158,7 +188,6 @@
     });
   </script>
 
-  <script src="/javascripts/dashboard.js" defer></script>
 </body>
 
 </html>
