@@ -72,54 +72,20 @@ export function AuthForm() {
     }
   };
 
-  const onRegister = async () => {
-    if (password !== confirmPassword) {
+  const onRegister = () => {
+    if (!username || !email || !password || !confirmPassword) {
       Toast.show({
         type: "error",
-        text1: "Passwords do not match",
-        position: toastPosition,
-      });
-      return;
-    } else if (!username || !email || !password) {
-      Toast.show({
-        type: "error",
-        text1: "Enter all fields",
+        text1: "Please fill all fields",
         position: toastPosition,
       });
       return;
     }
 
-    try {
-      const response = await fetch(`${apiUrl}/users`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, email, password }),
-      });
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        throw new Error(responseData.message || "Registration failed");
-      }
-
-      useUserStore.getState().setUser(responseData);
-
-      Toast.show({
-        type: "success",
-        text1: "Registered successfully!",
-        text2: responseData.message || "Welcome!",
-        position: toastPosition,
-      });
-    } catch (err: any) {
-      Toast.show({
-        type: "error",
-        text1: "Registration failed",
-        text2: err.message || "An error occurred, please try again.",
-        position: toastPosition,
-      });
-    }
+    router.push({
+      pathname: "/face-register",
+      params: { username, email, password },
+    });
   };
 
   const onLoginWithFaceId = () => {
@@ -167,18 +133,20 @@ export function AuthForm() {
                 />
               </ThemedView>
 
-              <ThemedView style={styles.formContainer_inputs_inputGroup}>
-                <ThemedText type="defaultSemiBold">Email</ThemedText>
-                <TextInput
-                  placeholder="Email"
-                  value={email}
-                  onChangeText={setEmail}
-                  style={styles.mainInput}
-                  autoCapitalize="none"
-                  keyboardAppearance="light"
-                  keyboardType="email-address"
-                />
-              </ThemedView>
+              {mode === "register" && (
+                <ThemedView style={styles.formContainer_inputs_inputGroup}>
+                  <ThemedText type="defaultSemiBold">Email</ThemedText>
+                  <TextInput
+                    placeholder="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                    style={styles.mainInput}
+                    autoCapitalize="none"
+                    keyboardAppearance="light"
+                    keyboardType="email-address"
+                  />
+                </ThemedView>
+              )}
 
               <ThemedView style={styles.formContainer_inputs_inputGroup}>
                 <ThemedText type="defaultSemiBold">Password</ThemedText>
@@ -239,7 +207,7 @@ export function AuthForm() {
             )}
           </ThemedText>
 
-          <ThemedView
+          {/* <ThemedView
             style={{
               flexDirection: "row",
               alignItems: "center",
@@ -264,16 +232,16 @@ export function AuthForm() {
             <ThemedView
               style={{ flex: 1, height: 1, backgroundColor: Colors.white }}
             />
-          </ThemedView>
+          </ThemedView> */}
 
-          <Button
+          {/* <Button
             variant="filled"
             color={Colors.primary}
             style={{ borderRadius: 16, paddingVertical: 16 }}
             onPress={onLoginWithFaceId}
           >
             Login with Face ID
-          </Button>
+          </Button> */}
         </ThemedView>
       </ScrollView>
     </KeyboardAvoidingView>
