@@ -2,8 +2,9 @@ import { Colors } from "@/constants/Colors";
 import { spacing } from "@/constants/Spacing";
 import { useUserStore } from "@/store/useUserStore";
 import { useRouter } from "expo-router";
-import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, TouchableOpacity } from "react-native";
 import { ThemedText } from "./ThemedText";
+import { ThemedView } from "./ThemedView";
 import { IconSymbol } from "./ui/IconSymbol";
 
 export default function TopBar() {
@@ -12,7 +13,7 @@ export default function TopBar() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
+    <ThemedView style={styles.container}>
       <Image
         source={require("../assets/images/HistoryRunLogo.png")}
         style={styles.logo}
@@ -23,12 +24,12 @@ export default function TopBar() {
         </TouchableOpacity>
       ) : (
         <TouchableOpacity onPress={() => router.push("/profile")}>
-          <ThemedText type="link" style={{ color: "white", fontWeight: "600" }}>
+          <ThemedText type="link" style={{ color: "white", fontWeight: "800" }}>
             Log In
           </ThemedText>
         </TouchableOpacity>
       )}
-    </View>
+    </ThemedView>
   );
 }
 
@@ -40,7 +41,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "transparent",
+    backgroundColor: Colors.dark.background,
     position: "absolute",
     top: 0,
     left: 0,

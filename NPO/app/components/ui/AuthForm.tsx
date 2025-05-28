@@ -53,7 +53,6 @@ export function AuthForm() {
       }
 
       const user = await response.json();
-
       useUserStore.getState().setUser(user);
 
       Toast.show({

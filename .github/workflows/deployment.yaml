@@ -8,7 +8,7 @@ on:
 jobs:
 
   server-upload:
-    name: Server upload
+    name: Server Upload
     runs-on: self-hosted
     steps:
     - name: Get project from Github
@@ -29,7 +29,7 @@ jobs:
             RAIN/web-scrapper/
 
   server-setup:
-    name: Server setup
+    name: Server Setup
     runs-on: self-hosted
     needs: server-upload
     steps:
@@ -44,3 +44,25 @@ jobs:
           host: ${{ secrets.SERVER_URL }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
+
+  test-containers:
+    name: Test Server Containers
+    runs-on: self-hosted
+    needs: server-setup
+    
+    steps:
+      - name: Get project from Github
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install libraries
+        run: |
+          cd .tests
+          pip install -r requirements.txt
+      
+      - name: Run MongoDB connection test
+        run: python3 .tests/test_mongo.py
