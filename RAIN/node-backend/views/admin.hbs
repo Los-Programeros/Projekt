@@ -113,7 +113,7 @@
       </section>
 
       <!-- Landmarks -->
-      <section class="bg-white p-6 rounded-xl shadow">
+      <section class="bg-white p-6 rounded-xl shadow max-h-64 overflow-y-auto">
         <h2 class="text-2xl font-semibold mb-4">Landmarks</h2>
         <ul id="landmark-list" class="divide-y divide-gray-200">
           {{#each landmarks}}
@@ -129,64 +129,75 @@
 
 
       <!-- User Activities -->
-      <section class="bg-white p-6 rounded-xl shadow">
+      <section class="bg-white p-6 rounded-xl shadow max-h-64 overflow-y-auto">
         <h2 class="text-2xl font-semibold mb-4">User Activities</h2>
-        <ul class="space-y-2">
+        <ul class="divide-y divide-gray-200">
           {{#each userActivities}}
-          <li class="border-b pb-2">{{this.date}} — visited: <span class="text-sm text-gray-600">{{this.visited}}</span>
+          <li class="py-3 flex items-start space-x-4">
+            <div class="text-blue-500 text-xl mt-1.5">🕒</div>
+            <div class="flex-1">
+              <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-500">{{this.date}}</div>
+                {{#if this.username}}
+                <div class="text-sm font-semibold text-gray-600">👤 {{this.username}}</div>
+                {{/if}}
+              </div>
+              <div class="mt-1 text-gray-800">
+                <span class="font-medium">Visited:</span>
+                <span class="text-gray-700">{{this.visited}}</span>
+              </div>
+            </div>
           </li>
           {{/each}}
         </ul>
       </section>
-    </main>
-  </div>
 
-  <!-- Leaflet inicializacija -->
-  <script>
-    const map = L.map('map').setView([46.0569, 14.5058], 8);
+      <!-- Leaflet inicializacija -->
+      <script>
+        const map = L.map('map').setView([46.0569, 14.5058], 8);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap sodelavci'
-    }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap sodelavci'
+        }).addTo(map);
 
-    // Shrani vse markerje po koordinatah
-    const markerMap = {};
+        // Shrani vse markerje po koordinatah
+        const markerMap = {};
 
-    // Ustvari markerje in popupe
-    landmarks.forEach(lm => {
-      const parts = lm.coordinates.split(',').map(s => parseFloat(s.trim()));
-      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-        const marker = L.marker(parts).addTo(map)
-          .bindPopup(`<strong>${lm.name}</strong><br>${lm.category || ''}`);
-        markerMap[lm.coordinates] = marker;
-      }
-    });
+        // Ustvari markerje in popupe
+        landmarks.forEach(lm => {
+          const parts = lm.coordinates.split(',').map(s => parseFloat(s.trim()));
+          if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            const marker = L.marker(parts).addTo(map)
+              .bindPopup(`<strong>${lm.name}</strong><br>${lm.category || ''}`);
+            markerMap[lm.coordinates] = marker;
+          }
+        });
 
-    // Scroll helper do zemljevida
-    function scrollToMap() {
-      const mapSection = document.getElementById('map');
-      mapSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    // Klik poslušalec na seznam
-    document.querySelectorAll('#landmark-list li').forEach(item => {
-      item.addEventListener('click', () => {
-        const coords = item.getAttribute('data-coordinates');
-        const parts = coords.split(',').map(s => parseFloat(s.trim()));
-        const marker = markerMap[coords];
-
-        if (marker && parts.length === 2) {
-          map.flyTo(parts, 14, { duration: 1.2 });
-          marker.openPopup();
-          scrollToMap();
-
-          // Vizualna označitev izbrane lokacije
-          document.querySelectorAll('#landmark-list li').forEach(li => li.classList.remove('bg-blue-100'));
-          item.classList.add('bg-blue-100');
+        // Scroll helper do zemljevida
+        function scrollToMap() {
+          const mapSection = document.getElementById('map');
+          mapSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      });
-    });
-  </script>
+
+        // Klik poslušalec na seznam
+        document.querySelectorAll('#landmark-list li').forEach(item => {
+          item.addEventListener('click', () => {
+            const coords = item.getAttribute('data-coordinates');
+            const parts = coords.split(',').map(s => parseFloat(s.trim()));
+            const marker = markerMap[coords];
+
+            if (marker && parts.length === 2) {
+              map.flyTo(parts, 14, { duration: 1.2 });
+              marker.openPopup();
+              scrollToMap();
+
+              // Vizualna označitev izbrane lokacije
+              document.querySelectorAll('#landmark-list li').forEach(li => li.classList.remove('bg-blue-100'));
+              item.classList.add('bg-blue-100');
+            }
+          });
+        });
+      </script>
 
 </body>
 
