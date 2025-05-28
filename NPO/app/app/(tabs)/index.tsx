@@ -1,6 +1,6 @@
-import { HelloWave } from "@/components/HelloWave";
 import { LandmarkCard } from "@/components/LandmarkCard";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
+import { StatCard } from "@/components/StatCard";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 
@@ -8,7 +8,7 @@ export default function HomeScreen() {
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: "transparent", dark: "transparent" }}
-      headerContent={<HelloWave />}
+      headerContent={<StatCard />}
     >
       <ThemedView>
         <ThemedText type="title">The Monuments</ThemedText>
