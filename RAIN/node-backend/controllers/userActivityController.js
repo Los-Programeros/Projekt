@@ -10,16 +10,23 @@ module.exports = {
    * userActivityController.list()
    */
   list: function (req, res) {
-    UseractivityModel.find(function (err, userActivitys) {
-      if (err) {
-        return res.status(500).json({
-          message: "Error when getting userActivity.",
-          error: err,
-        });
-      }
+    UseractivityModel.find()
+      .populate('user', 'username') // samo username iz userja
+      .populate('visited.landmark', 'name') // samo ime iz landmarka
+      .exec(function (err, userActivitys) {
+        if (err) {
+          return res.status(500).json({
+            message: "Error when getting userActivity.",
+            error: err,
+          });
+        }
 
-      return res.json(userActivitys);
-    });
+        // če vračaš JSON
+        // return res.json(userActivitys);
+
+        // če prikazuješ s handlebars
+        return res.render('userActivities', { userActivitys });
+      });
   },
 
   /**

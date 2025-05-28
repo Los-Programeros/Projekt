@@ -12,9 +12,10 @@ router.get('/', async (req, res) => {
     const [users, landmarks, sensorData, userActivities] = await Promise.all([
       User.find({}),
       Landmark.find({}),
-      SensorData.find({}),
-      UserActivity.find({})
+      SensorData.find({}).populate('user', 'username'), // Populate user with username
+      UserActivity.find({}).populate('user', 'username').populate('visited.landmark', 'name') // Populate user and landmark names
     ]);
+
 
     res.render('admin', {
       layout: false,
@@ -24,6 +25,7 @@ router.get('/', async (req, res) => {
       userActivities
     });
   } catch (error) {
+    console.error('Admin panel error:', error.message);
     res.status(500).send('Admin panel error: ' + error.message);
   }
 });
