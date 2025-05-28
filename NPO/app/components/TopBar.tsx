@@ -24,7 +24,7 @@ export default function TopBar() {
         </TouchableOpacity>
       ) : (
         <TouchableOpacity onPress={() => router.push("/profile")}>
-          <ThemedText type="link" style={{ color: "white", fontWeight: "600" }}>
+          <ThemedText type="link" style={{ color: "white", fontWeight: "800" }}>
             Log In
           </ThemedText>
         </TouchableOpacity>

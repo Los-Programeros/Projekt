@@ -24,7 +24,7 @@ export function StatCard() {
           <TouchableOpacity onPress={() => router.push("/profile")}>
             <ThemedText
               type="link"
-              style={{ color: "white", fontWeight: "800" }}
+              style={{ color: "white", fontWeight: "800", fontSize: 32 }}
             >
               Log In
             </ThemedText>
