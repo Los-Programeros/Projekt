@@ -3,7 +3,7 @@ const FormData = require("form-data");
 const fs = require("fs");
 const path = require("path");
 
-const endpoint = "http://localhost:5000/predict";
+const endpoint = "http://model-container:5000/predict";
 
 module.exports = {
   verifyFaceModel: async (sessionId, imageBase64) => {
