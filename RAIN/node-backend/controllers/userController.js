@@ -1,4 +1,6 @@
 var UserModel = require("../models/userModel.js");
+const fs = require("fs");
+const path = require("path");
 
 /**
  * userController.js
@@ -49,34 +51,70 @@ module.exports = {
   /**
    * userController.create()
    */
-  create: function (req, res) {
-    const { username, email, password } = req.body;
+  register: function (req, res) {
+    const { username, email, password, images } = req.body; // images = [base64 strings]
+
+    if (!images || images.length !== 5) {
+      return res
+        .status(400)
+        .json({ message: "Exactly 5 images required for registration" });
+    }
 
     UserModel.findOne(
       { $or: [{ username }, { email }] },
-      function (err, existingUser) {
+      async function (err, existingUser) {
         if (err) {
-          return res
-            .status(500)
-            .json({ message: "Error checking for existing user", error: err });
+          return res.status(500).json({
+            message: "Error checking for existing user",
+            error: err,
+          });
         }
 
         if (existingUser) {
           return res
             .status(400)
-            .json({ message: "User with Username or email already exists!" });
+            .json({ message: "User with username or email already exists" });
         }
 
-        const user = new UserModel({ username, email, password });
+        try {
+          // Create a directory to store user images
+          const userDir = path.join(__dirname, "../face_data", username);
+          fs.mkdirSync(userDir, { recursive: true });
 
-        user.save(function (err, savedUser) {
-          if (err) {
-            return res
-              .status(500)
-              .json({ message: "Error creating user", error: err });
-          }
-          return res.status(201).json(savedUser);
-        });
+          // Save each image as a .jpg file
+          const savedPaths = images.map((base64, index) => {
+            const imgBuffer = Buffer.from(base64, "base64");
+            const filePath = path.join(userDir, `${index}.jpg`);
+            fs.writeFileSync(filePath, imgBuffer);
+            return filePath;
+          });
+
+          // TODO: Optionally, call a Python script or recognition service to process these images here
+          // e.g., await runPythonModel(savedPaths);
+
+          // Save the user
+          const user = new UserModel({
+            username,
+            email,
+            password,
+            imagePath: userDir, // optional
+          });
+
+          user.save(function (err, savedUser) {
+            if (err) {
+              return res.status(500).json({
+                message: "Error creating user",
+                error: err,
+              });
+            }
+            return res.status(201).json(savedUser);
+          });
+        } catch (err) {
+          return res.status(500).json({
+            message: "Error saving user images",
+            error: err,
+          });
+        }
       }
     );
   },
@@ -134,14 +172,6 @@ module.exports = {
 
       return res.status(204).json();
     });
-  },
-
-  showRegister: function (req, res) {
-    res.render("user/register");
-  },
-
-  showLogin: function (req, res) {
-    res.render("user/login");
   },
 
   login: function (req, res, next) {
