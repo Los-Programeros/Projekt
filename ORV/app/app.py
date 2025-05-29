@@ -19,17 +19,19 @@ IMAGE_SIZE = 64
 BATCH_SIZE = 16
 EPOCHS = 3
 
-# Directory where user training data will be stored
-DATA_ROOT = "user_faces"
-MODEL_ROOT = "models"
+DATA_ROOT = os.path.join("data", "user_faces")
+MODEL_ROOT = os.path.join("data", "models")
 
 os.makedirs(DATA_ROOT, exist_ok=True)
 os.makedirs(MODEL_ROOT, exist_ok=True)
 
 def preprocess_and_save_images(user_id, files):
     user_dir = os.path.join(DATA_ROOT, user_id, "positive")
+    neg_dir = os.path.join(DATA_ROOT, user_id, "negative")
     os.makedirs(user_dir, exist_ok=True)
+    os.makedirs(neg_dir, exist_ok=True)
 
+    # Save positive images
     for file in files:
         try:
             image = Image.open(file.stream).convert("RGB")
@@ -40,14 +42,19 @@ def preprocess_and_save_images(user_id, files):
             print(f"Failed to process image: {e}")
             continue
 
-    neg_dir = os.path.join(DATA_ROOT, user_id, "negative")
-    os.makedirs(neg_dir, exist_ok=True)
-    for _ in range(3):
-        dummy_image = np.random.randint(0, 255, (IMAGE_SIZE, IMAGE_SIZE, 3), dtype=np.uint8)
-        Image.fromarray(dummy_image).save(os.path.join(neg_dir, f"{uuid.uuid4()}.jpg"))
+    # Copy shared negatives
+    shared_neg_dir = os.path.join("data", "negatives")
+    if os.path.exists(shared_neg_dir):
+        for fname in os.listdir(shared_neg_dir):
+            if fname.lower().endswith(('.png', '.jpg', '.jpeg')):
+                try:
+                    src = os.path.join(shared_neg_dir, fname)
+                    dst = os.path.join(neg_dir, f"{uuid.uuid4()}.jpg")
+                    shutil.copyfile(src, dst)
+                except Exception as e:
+                    print(f"Error copying negative: {e}")
 
     return os.path.join(DATA_ROOT, user_id)
-
 
 def train_model(user_id, user_data_dir):
     datagen = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255, validation_split=0.2)
