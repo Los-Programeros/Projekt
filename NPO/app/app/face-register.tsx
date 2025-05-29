@@ -21,6 +21,7 @@ export default function FaceRegister() {
 
   const [permission, requestPermission] = useCameraPermissions();
   const [isCapturing, setIsCapturing] = useState(false);
+  const [isTraining, setIsTraining] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -50,6 +51,8 @@ export default function FaceRegister() {
       if (currentStep < directions.length - 1) {
         setCurrentStep((prev) => prev + 1);
       } else {
+        setIsTraining(true);
+
         const response = await fetch(`${apiUrl}/users`, {
           method: "POST",
           headers: {
@@ -89,6 +92,7 @@ export default function FaceRegister() {
       });
     } finally {
       setIsCapturing(false);
+      setIsTraining(false);
     }
   };
 
@@ -100,6 +104,14 @@ export default function FaceRegister() {
           We need your permission to show the camera
         </Text>
         <Button onPress={requestPermission} title="Grant permission" />
+      </View>
+    );
+  }
+
+  if (isTraining) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <Text style={styles.trainingText}>Training model, please wait...</Text>
       </View>
     );
   }
@@ -170,5 +182,15 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 18,
     color: "white",
+  },
+  center: {
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "black",
+  },
+  trainingText: {
+    fontSize: 20,
+    color: "white",
+    fontWeight: "bold",
   },
 });
