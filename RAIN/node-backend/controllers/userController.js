@@ -1,6 +1,8 @@
 var UserModel = require("../models/userModel.js");
 const fs = require("fs");
 const path = require("path");
+const { trainFaceModel } = require("../services/faceRecognition");
+const faceRecognition = require("../services/faceRecognition");
 
 /**
  * userController.js
@@ -52,7 +54,7 @@ module.exports = {
    * userController.create()
    */
   register: function (req, res) {
-    const { username, email, password, images } = req.body; // images = [base64 strings]
+    const { username, email, password, images } = req.body;
 
     if (!images || images.length !== 5) {
       return res
@@ -77,42 +79,87 @@ module.exports = {
         }
 
         try {
-          // Create a directory to store user images
           const userDir = path.join(__dirname, "../face_data", username);
           fs.mkdirSync(userDir, { recursive: true });
 
-          // Save each image as a .jpg file
           const savedPaths = images.map((base64, index) => {
-            const imgBuffer = Buffer.from(base64, "base64");
-            const filePath = path.join(userDir, `${index}.jpg`);
-            fs.writeFileSync(filePath, imgBuffer);
-            return filePath;
+            try {
+              const imgBuffer = Buffer.from(base64, "base64");
+              const filePath = path.join(userDir, `${index}.jpg`);
+              fs.writeFileSync(filePath, imgBuffer);
+
+              // Verify file was written successfully
+              if (!fs.existsSync(filePath)) {
+                throw new Error(`Failed to save image ${index}`);
+              }
+
+              return filePath;
+            } catch (imgErr) {
+              throw new Error(
+                `Error processing image ${index}: ${imgErr.message}`
+              );
+            }
           });
 
-          // TODO: Optionally, call a Python script or recognition service to process these images here
-          // e.g., await runPythonModel(savedPaths);
-
-          // Save the user
           const user = new UserModel({
             username,
             email,
             password,
-            imagePath: userDir, // optional
+            imagePath: userDir,
           });
 
-          user.save(function (err, savedUser) {
+          user.save(async function (err, savedUser) {
             if (err) {
+              try {
+                savedPaths.forEach((filePath) => {
+                  if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                  }
+                });
+                fs.rmdirSync(userDir);
+              } catch (cleanupErr) {
+                console.error("Error cleaning up files:", cleanupErr);
+              }
+
               return res.status(500).json({
                 message: "Error creating user",
                 error: err,
               });
             }
-            return res.status(201).json(savedUser);
+
+            try {
+              const result = await trainFaceModel(savedUser._id, savedPaths);
+
+              if (result.success) {
+                console.log(
+                  "Face model training successful for user:",
+                  savedUser._id
+                );
+                return res.status(201).json({
+                  ...savedUser.toObject(),
+                  trainingStatus: "completed",
+                });
+              } else {
+                console.error("Face model training failed:", result.error);
+                return res.status(201).json({
+                  ...savedUser.toObject(),
+                  trainingStatus: "failed",
+                  trainingError: result.error,
+                });
+              }
+            } catch (trainingErr) {
+              console.error("Face model training error:", trainingErr);
+              return res.status(201).json({
+                ...savedUser.toObject(),
+                trainingStatus: "failed",
+                trainingError: trainingErr.message,
+              });
+            }
           });
         } catch (err) {
           return res.status(500).json({
             message: "Error saving user images",
-            error: err,
+            error: err.message || err,
           });
         }
       }
@@ -174,23 +221,36 @@ module.exports = {
     });
   },
 
-  login: function (req, res, next) {
-    UserModel.authenticate(
-      req.body.username,
-      req.body.password,
-      function (err, user) {
-        if (err || !user) {
-          return res
-            .status(401)
-            .json({ message: "Wrong username or password" });
-        }
+  login: async function (req, res, next) {
+    try {
+      const user = await new Promise((resolve, reject) => {
+        UserModel.authenticate(
+          req.body.username,
+          req.body.password,
+          (err, user) => {
+            if (err || !user)
+              return reject(new Error("Wrong username or password"));
+            resolve(user);
+          }
+        );
+      });
 
-        req.session.userId = user._id;
+      const result = await faceRecognition.verifyFaceModel(
+        user._id,
+        req.body.image
+      );
 
-        const { _id, username, email } = user;
-        return res.status(200).json({ _id, username, email });
+      if (!result.success || !result.verified) {
+        return res.status(401).json({ message: "Face not recognized" });
       }
-    );
+
+      req.session.userId = user._id;
+
+      const { _id, username, email } = user;
+      return res.status(200).json({ _id, username, email });
+    } catch (err) {
+      return res.status(401).json({ message: err.message || "Login failed" });
+    }
   },
 
   profile: function (req, res, next) {
