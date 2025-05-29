@@ -9,7 +9,6 @@ import {
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
-import { useUserStore } from "@/store/useUserStore";
 import { Button } from "@react-navigation/elements";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -27,7 +26,7 @@ export function AuthForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const onLogin = async () => {
+  const onLogin = () => {
     if (!username || !password) {
       Toast.show({
         type: "error",
@@ -37,39 +36,10 @@ export function AuthForm() {
       return;
     }
 
-    try {
-      const response = await fetch(`${apiUrl}/users/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify({ username, password }),
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Invalid username or password");
-      }
-
-      const user = await response.json();
-      useUserStore.getState().setUser(user);
-
-      Toast.show({
-        type: "success",
-        text1: "Login successful! Hello!",
-        position: toastPosition,
-      });
-
-      router.replace("/profile");
-    } catch (err: any) {
-      Toast.show({
-        type: "error",
-        text1: "Login failed",
-        text2: err.message || "An error occurred",
-        position: toastPosition,
-      });
-    }
+    router.push({
+      pathname: "/face-login",
+      params: { username, password },
+    });
   };
 
   const onRegister = () => {
@@ -86,10 +56,6 @@ export function AuthForm() {
       pathname: "/face-register",
       params: { username, email, password },
     });
-  };
-
-  const onLoginWithFaceId = () => {
-    router.push("/face-login");
   };
 
   return (

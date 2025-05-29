@@ -18,21 +18,24 @@ export default function FaceRegister() {
     email: string;
     password: string;
   }>();
+
   const [permission, requestPermission] = useCameraPermissions();
   const [isCapturing, setIsCapturing] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
+  const [currentStep, setCurrentStep] = useState(0);
+
   const cameraRef = useRef<any>(null);
   const router = useRouter();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-  const toastPosition = Platform.OS === "ios" ? "top" : "bottom";
+  const toastPosition = Platform.OS === "ios" ? "bottom" : "bottom";
 
   const directions = ["straight", "right", "up", "left", "down"];
-  const [currentStep, setCurrentStep] = useState(0);
-  const [images, setImages] = useState<string[]>([]);
 
   const captureAndRegister = async () => {
     if (!cameraRef.current || isCapturing) return;
 
     setIsCapturing(true);
+
     try {
       const photo = await cameraRef.current.takePictureAsync({
         base64: true,
@@ -41,13 +44,8 @@ export default function FaceRegister() {
 
       if (!photo.base64) throw new Error("Failed to capture image.");
 
-      setImages((prev) => [...prev, photo.base64]);
-
-      Toast.show({
-        type: "success",
-        text1: `Captured: ${directions[currentStep]}`,
-        position: toastPosition,
-      });
+      const updatedImages = [...images, photo.base64];
+      setImages(updatedImages);
 
       if (currentStep < directions.length - 1) {
         setCurrentStep((prev) => prev + 1);
@@ -61,7 +59,7 @@ export default function FaceRegister() {
             username,
             email,
             password,
-            images,
+            images: updatedImages,
           }),
         });
 

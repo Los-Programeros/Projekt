@@ -4,12 +4,16 @@ import {
   CameraView,
   useCameraPermissions,
 } from "expo-camera";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 
 export default function FaceLogin() {
+  const { username, password } = useLocalSearchParams<{
+    username: string;
+    password: string;
+  }>();
   const [permission, requestPermission] = useCameraPermissions();
   const [isCapturing, setIsCapturing] = useState(false);
   const cameraRef = useRef<any>(null);
@@ -26,32 +30,40 @@ export default function FaceLogin() {
       const photo: CameraCapturedPicture =
         await cameraRef.current.takePictureAsync({
           base64: true,
-          quality: 1,
+          quality: 0.3,
         });
 
       const imageBase64 = photo.base64;
 
-      const response = await fetch(`${apiUrl}/face-auth/verify`, {
+      const loginRes = await fetch(`${apiUrl}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId: "dummy-session-id",
-          image: imageBase64,
-        }),
+        body: JSON.stringify({ username, password, image: imageBase64 }),
+        credentials: "include",
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        useUserStore.getState().setUser(data.user);
-
-        Toast.show({ type: "success", text1: "Face recognized!" });
-        router.replace("/profile");
-      } else {
-        Toast.show({ type: "error", text1: "Face not recognized" });
+      if (!loginRes.ok) {
+        const errText = await loginRes.text();
+        throw new Error("Invalid credentials or face mismatch: " + errText);
       }
+
+      const user = await loginRes.json();
+
+      useUserStore.getState().setUser(user);
+
+      Toast.show({
+        type: "success",
+        text1: "Login successful",
+        text2: `Welcome back, ${user.username || "user"}!`,
+      });
+
+      router.replace("/profile");
     } catch (err: any) {
-      Toast.show({ type: "error", text1: "Error", text2: err.message });
+      Toast.show({
+        type: "error",
+        text1: "Login failed",
+        text2: err.message,
+      });
     } finally {
       setIsCapturing(false);
     }
@@ -73,7 +85,7 @@ export default function FaceLogin() {
     <View style={styles.container}>
       <CameraView
         style={styles.camera}
-        facing={"back"}
+        facing={"front"}
         ref={cameraRef}
         enableTorch={false}
       >
