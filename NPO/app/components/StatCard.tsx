@@ -123,7 +123,7 @@ export function StatCard() {
 
 const styles = StyleSheet.create({
   card_container: {
-    marginTop: 120,
+    marginTop: 16,
     height: 210,
     borderColor: Colors.white,
     borderWidth: 1,

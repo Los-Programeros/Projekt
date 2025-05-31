@@ -13,6 +13,7 @@ import {
   Alert,
   Button,
   Modal,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -334,10 +335,10 @@ export default function MapScreen() {
 }
 
 const styles = StyleSheet.create({
-  map: { flex: 1, marginTop: 100 },
+  map: { flex: 1 },
   info: {
     position: "absolute",
-    bottom: 16,
+    bottom: Platform.OS === "ios" ? 100 : 16,
     left: 16,
     right: 16,
     backgroundColor: Colors.dark.background,
