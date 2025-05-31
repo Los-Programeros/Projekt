@@ -9,6 +9,7 @@ import {
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
+import { Positions } from "@/constants/Positions";
 import { Button } from "@react-navigation/elements";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -17,7 +18,7 @@ import Toast from "react-native-toast-message";
 
 export function AuthForm() {
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-  const toastPosition = Platform.OS === "ios" ? "top" : "bottom";
+  const toastPosition: any = Positions.toastPosition;
   const router = useRouter();
 
   const [mode, setMode] = useState<"login" | "register">("login");

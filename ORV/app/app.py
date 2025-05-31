@@ -15,12 +15,13 @@ import shutil
 
 app = Flask(__name__)
 
-IMAGE_SIZE = 64
+IMAGE_SIZE = 40
 BATCH_SIZE = 16
 EPOCHS = 3
 
 DATA_ROOT = os.path.join("data", "user_faces")
 MODEL_ROOT = os.path.join("data", "models")
+SHARED_NEG_DIR = os.path.abspath(os.path.join("data", "negatives"))
 
 os.makedirs(DATA_ROOT, exist_ok=True)
 os.makedirs(MODEL_ROOT, exist_ok=True)
@@ -30,7 +31,6 @@ def preprocess_and_save_images(user_id, files):
     user_dir = os.path.join(DATA_ROOT, user_id, "positive")
     neg_dir = os.path.join(DATA_ROOT, user_id, "negative")
     os.makedirs(user_dir, exist_ok=True)
-    os.makedirs(neg_dir, exist_ok=True)
 
     for file in files:
         try:
@@ -43,23 +43,43 @@ def preprocess_and_save_images(user_id, files):
             print(f"[ERROR] Failed to process image {file.filename}: {e}")
             continue
 
-    shared_neg_dir = os.path.join("data", "negatives")
-    if os.path.exists(shared_neg_dir):
-        for fname in os.listdir(shared_neg_dir):
-            if fname.lower().endswith(('.png', '.jpg', '.jpeg')):
-                try:
-                    print(f"[INFO] Copying negative sample {fname}")
-                    src = os.path.join(shared_neg_dir, fname)
-                    dst = os.path.join(neg_dir, f"{uuid.uuid4()}.jpg")
-                    shutil.copyfile(src, dst)
-                except Exception as e:
-                    print(f"[ERROR] Error copying negative: {e}")
+    if os.path.exists(SHARED_NEG_DIR):
+        try:
+            if not os.path.exists(neg_dir):
+                os.symlink(SHARED_NEG_DIR, neg_dir)
+                print(f"[INFO] Created symlink to shared negatives for user {user_id}")
+        except OSError as e:
+            print(f"[WARN] Symlink failed ({e}), falling back to copy...")
+            os.makedirs(neg_dir, exist_ok=True)
+            marker = os.path.join(neg_dir, ".copied")
+            if not os.path.exists(marker):
+                for fname in os.listdir(SHARED_NEG_DIR):
+                    if fname.lower().endswith(('.png', '.jpg', '.jpeg')):
+                        try:
+                            src = os.path.join(SHARED_NEG_DIR, fname)
+                            dst = os.path.join(neg_dir, f"{uuid.uuid4()}.jpg")
+                            shutil.copyfile(src, dst)
+                        except Exception as e:
+                            print(f"[ERROR] Copying negative {fname} failed: {e}")
+                with open(marker, "w") as f:
+                    f.write("done")
+    else:
+        print("[WARN] Shared negatives directory does not exist.")
 
     return os.path.join(DATA_ROOT, user_id)
 
 def train_model(user_id, user_data_dir):
     print(f"[INFO] Training model for user {user_id} using data from {user_data_dir}")
-    datagen = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255, validation_split=0.2)
+
+    datagen = tf.keras.preprocessing.image.ImageDataGenerator(
+        rescale=1./255,
+        validation_split=0.2,
+        rotation_range=10,
+        width_shift_range=0.1,
+        height_shift_range=0.1,
+        zoom_range=0.1,
+        horizontal_flip=True
+    )
 
     train_gen = datagen.flow_from_directory(
         user_data_dir,
@@ -190,4 +210,9 @@ def predict():
 
 if __name__ == "__main__":
     print("[INFO] Starting Flask app...")
+
+    print("[INFO] Preloading MobileNetV2 weights...")
+    _ = MobileNetV2(weights='imagenet', include_top=False, input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3))
+
     app.run(host="0.0.0.0", port=5000)
+

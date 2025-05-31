@@ -1,15 +1,9 @@
+import { Positions } from "@/constants/Positions";
 import { useUserStore } from "@/store/useUserStore";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import {
-  Button,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 
 export default function FaceRegister() {
@@ -28,7 +22,7 @@ export default function FaceRegister() {
   const cameraRef = useRef<any>(null);
   const router = useRouter();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-  const toastPosition = Platform.OS === "ios" ? "bottom" : "bottom";
+  const toastPosition: any = Positions.toastPosition;
 
   const directions = ["straight", "right", "up", "left", "down"];
 

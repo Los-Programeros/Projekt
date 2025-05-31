@@ -56,7 +56,7 @@ module.exports = {
 			userActivity : req.body.userActivity,
 			date : req.body.date,
 			coordinates : req.body.coordinates,
-			accelerometer : req.body.accelerometer
+			speed : req.body.speed
         });
 
         sensorData.save(function (err, sensorData) {
@@ -95,7 +95,7 @@ module.exports = {
 			sensorData.userActivity = req.body.userActivity ? req.body.userActivity : sensorData.userActivity;
 			sensorData.date = req.body.date ? req.body.date : sensorData.date;
 			sensorData.coordinates = req.body.coordinates ? req.body.coordinates : sensorData.coordinates;
-			sensorData.accelerometer = req.body.accelerometer ? req.body.accelerometer : sensorData.accelerometer;
+			sensorData.speed = req.body.speed ? req.body.speed : sensorData.speed;
 			
             sensorData.save(function (err, sensorData) {
                 if (err) {

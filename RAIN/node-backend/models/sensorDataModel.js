@@ -12,7 +12,7 @@ var sensorDataSchema = new Schema({
 	},
 	'date' : Date,
 	'coordinates' : String,
-	'accelerometer' : String
+	'speed' : String
 });
 
 module.exports = mongoose.model('sensorData', sensorDataSchema);

@@ -1,7 +1,7 @@
 import { Colors } from "@/constants/Colors";
+import { Positions } from "@/constants/Positions";
 import { useUserStore } from "@/store/useUserStore";
 import { Button } from "@react-navigation/elements";
-import { Platform } from "react-native";
 import Toast from "react-native-toast-message";
 import ParallaxScrollView from "../ParallaxScrollView";
 import { ThemedText } from "../ThemedText";
@@ -10,7 +10,7 @@ import { ThemedView } from "../ThemedView";
 //zdaj si v pravem: SCRUM-56-Uporabniški-profil - TODO
 
 export function LoggedInProfile() {
-  const toastPosition = Platform.OS === "ios" ? "top" : "bottom";
+  const toastPosition: any = Positions.toastPosition;
   const { user } = useUserStore();
 
   let logout = async () => {
