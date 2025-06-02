@@ -281,4 +281,28 @@ module.exports = {
       return res.status(200).json({ message: "No session to destroy" });
     }
   },
+  active: function (req, res) {
+    const { userId, active } = req.body;
+
+    if (!userId || typeof active !== 'boolean') {
+      return res.status(400);
+    }
+
+    UserModel.findByIdAndUpdate(
+      userId,
+      { active: active },
+      { new: true },
+      function (err, user) {
+        if (err) {
+          return res.status(500);
+        }
+
+        if (!user) {
+          return res.status(404);
+        }
+
+        return res.status(200);
+      }
+  );
+}
 };
