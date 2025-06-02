@@ -283,26 +283,41 @@ module.exports = {
   },
   active: function (req, res) {
     const { userId, active } = req.body;
-
+    
     if (!userId || typeof active !== 'boolean') {
-      return res.status(400);
+        return res.status(400).json({ 
+            error: 'Invalid request', 
+            details: 'userId is required and active must be boolean' 
+        });
     }
-
+    
     UserModel.findByIdAndUpdate(
-      userId,
-      { active: active },
-      { new: true },
-      function (err, user) {
-        if (err) {
-          return res.status(500);
+        userId,
+        { active: active },
+        { new: true },
+        function (err, user) {
+            if (err) {
+                return res.status(500).json({ 
+                    error: 'Database error', 
+                    details: err.message 
+                });
+            }
+            if (!user) {
+                return res.status(404).json({ 
+                    error: 'User not found', 
+                    userId: userId 
+                });
+            }
+            
+            return res.status(200).json({ 
+                success: true,
+                user: {
+                    id: user._id,
+                    username: user.username,
+                    active: user.active
+                }
+            });
         }
-
-        if (!user) {
-          return res.status(404);
-        }
-
-        return res.status(200);
-      }
-  );
-}
+    );
+  }
 };
