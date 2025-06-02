@@ -20,6 +20,7 @@ router.get("/:id", userController.show);
 
 router.post("/", userController.register);
 router.post("/login", userController.login);
+router.post("/active", userController.active);
 
 router.put("/:id", userController.update);
 
