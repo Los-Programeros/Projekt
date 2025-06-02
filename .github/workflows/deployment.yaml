@@ -64,5 +64,8 @@ jobs:
           cd .tests
           pip install -r requirements.txt
       
-      - name: Run MongoDB connection test
+      - name: Run MongoDB test
         run: python3 .tests/test_mongo.py
+
+      - name: Run Node test
+        run: python3 .tests/test_node.py
