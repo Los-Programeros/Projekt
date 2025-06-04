@@ -14,7 +14,7 @@ def test_mqtt_broker():
             client.connected_flag = False
 
     mqtt.Client.connected_flag = False
-    client = mqtt.Client()
+    client = mqtt.Client(transport="websockets")
 
     client.on_connect = on_connect
 
