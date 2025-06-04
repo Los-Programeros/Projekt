@@ -1,16 +1,15 @@
-import subprocess, sys, pathlib, shutil
+import subprocess, sys, pathlib
 
 if len(sys.argv) != 2:
     print("Usage: python run.py <directory>")
     sys.exit(1)
 
-root_dir = pathlib.Path(sys.argv[1])
+root_dir = pathlib.Path(sys.argv[1]).resolve()
 if not root_dir.exists():
     print(f"Error: Directory '{root_dir}' does not exist")
     sys.exit(1)
 
 scripts = [
-    "PripravaPodatkov.py",
     "Predprocesiranje.py",
     "Augmentacija.py",
 ]
