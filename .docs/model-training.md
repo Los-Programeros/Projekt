@@ -1,0 +1,1 @@
+# Treniranje modela

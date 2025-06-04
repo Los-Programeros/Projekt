@@ -47,6 +47,8 @@ Klikni na gumbek **Logout** 🔒 v zgornjem desnem kotu zaslona.
 - **MQTT Backend** – Posreduje sporočila iz Mosquitto brokerja v Node.js strežnik.
 - **Node.js Strežnik** (`3000`)
 
+[a relative link](.docs/model-training.md)
+
 ## Namestitev
 
 Namestitev in posodobitev potekata avtomatsko prek GitHub Actions, ko se koda prenese v main vejo.

@@ -37,6 +37,9 @@ var hbs = require("hbs");
 hbs.registerHelper("json", function (context) {
   return JSON.stringify(context);
 });
+hbs.registerHelper("sumActive", function (users) {
+  return users.filter(user => user.active === true).length;
+});
 
 app.use(logger("dev"));
 app.use(express.json({ limit: "10mb" }));
