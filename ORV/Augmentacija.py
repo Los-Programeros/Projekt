@@ -1,18 +1,36 @@
-import cv2, numpy as np, uuid, random
+import cv2, numpy as np, uuid, random, shutil
 from pathlib import Path
+import sys
 
-root = Path("1")
-latest = max(
-    (d for d in root.iterdir() if d.is_dir() and d.name.isdigit()),
-    key=lambda d: int(d.name),
-    default=None,
-)
-if latest is None:
-    raise RuntimeError("No numeric folder inside '1/'")
+if len(sys.argv) != 2:
+    print("Error: Directory path argument required")
+    sys.exit(1)
 
-src_dir = latest / "original"
-dst_dir = latest / "augmentacija"
+script_dir = Path(__file__).parent
+
+src_dir = script_dir / "1" / "predprocesirano"
+try:
+    resolved_source = src_dir.resolve()
+    print(f"Looking for images in: {resolved_source}")
+    if not src_dir.exists() or not src_dir.is_dir():
+        print(f"Error: 'predprocesirano' folder not found inside '{script_dir / '0'}'")
+        sys.exit(1)
+except Exception as e:
+    print(f"Error resolving directory: {e}")
+    sys.exit(1)
+
+one_dir = script_dir / "1"
+one_dir.mkdir(parents=True, exist_ok=True)
+numeric_folders = [d for d in one_dir.iterdir() if d.is_dir() and d.name.isdigit()]
+if numeric_folders:
+    latest_number = max(int(d.name) for d in numeric_folders)
+    new_number = latest_number + 1
+else:
+    new_number = 0
+
+dst_dir = one_dir / str(new_number)
 dst_dir.mkdir(parents=True, exist_ok=True)
+print(f"Saving augmented images to: {dst_dir}")
 
 def rand_brightness_contrast(img):
     a = random.uniform(0.6, 1.4)
