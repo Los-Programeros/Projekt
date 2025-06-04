@@ -1,16 +1,21 @@
-import cv2, numpy as np, uuid, random
+import cv2, numpy as np, uuid, random, shutil
 from pathlib import Path
+import sys
 
-root = Path("1")
+if len(sys.argv) != 2:
+    print("Error: Directory path argument required")
+    sys.exit(1)
+
+root = Path(sys.argv[1])
 latest = max(
     (d for d in root.iterdir() if d.is_dir() and d.name.isdigit()),
     key=lambda d: int(d.name),
     default=None,
 )
 if latest is None:
-    raise RuntimeError("No numeric folder inside '1/'")
+    raise RuntimeError(f"No numeric folder inside '{root}/'")
 
-src_dir = latest / "original"
+src_dir = latest / "predprocesirano"
 dst_dir = latest / "augmentacija"
 dst_dir.mkdir(parents=True, exist_ok=True)
 
@@ -56,3 +61,5 @@ for src in src_dir.glob("*.jpg"):
         out = f(img)
         name = f"{stem}_{f.__name__}_{uuid.uuid4().hex[:6]}.jpg"
         cv2.imwrite(str(dst_dir / name), out, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+        
+shutil.rmtree(src_dir)
