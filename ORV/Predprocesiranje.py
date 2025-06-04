@@ -1,14 +1,19 @@
 import cv2, numpy as np
 from pathlib import Path
+import sys
 
-root = Path("1")
+if len(sys.argv) != 2:
+    print("Error: Directory path argument required")
+    sys.exit(1)
+
+root = Path(sys.argv[1])
 latest = max(
     (d for d in root.iterdir() if d.is_dir() and d.name.isdigit()),
     key=lambda d: int(d.name),
     default=None,
 )
 if latest is None:
-    raise RuntimeError("No numeric folder inside '1/'")
+    raise RuntimeError(f"No numeric folder inside '{root}/'")
 
 src_dir = latest / "original"
 dst_dir = latest / "predprocesirano"
