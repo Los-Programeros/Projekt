@@ -69,3 +69,6 @@ jobs:
 
       - name: Run Node test
         run: python3 .tests/test_node.py
+
+      - name: Run MQTT test
+        run: python3 .tests/test_mqtt.py
