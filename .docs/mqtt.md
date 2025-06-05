@@ -1,0 +1,1 @@
+Opis mqtt strežnika
