@@ -1,1 +1,1 @@
-Opis mqtt strežnika
+Opis mqtt strežnika (Jože)
