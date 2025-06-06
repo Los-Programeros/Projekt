@@ -7,6 +7,8 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
+COPY ../augmentacija .
+
 EXPOSE 5000
 
 CMD ["python", "app.py"]
