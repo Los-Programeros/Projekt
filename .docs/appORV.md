@@ -109,20 +109,18 @@ docker container rm model-container
 
 ## ▶️ Uporaba
 
-1. Zaženite `setup.sh` za vzpostavitev okolja. 🛠️
-2. Pošljite POST zahtevek na `/train` z ID-jem uporabnika in slikami obraza. 🧠
-3. Po učenju lahko pošljete POST zahtevek na `/predict` za preverjanje uporabnika z novo sliko. 🔎
+1. Zaženite `setup.sh` za vzpostavitev okolja.
+2. Pošljite POST zahtevek na `/train` z ID-jem uporabnika in slikami obraza. (Naredi Node backend)
+3. Po učenju lahko pošljete POST zahtevek na `/predict` za preverjanje uporabnika z novo sliko. (Naredi Node backend)
 
 ## 👤 Zadolžitve
 
 **Član 3** – Priprava API-ja, Docker okolja in integracija s sistemom:
 
-* 🧪 Vzpostavil REST API s pomočjo Flask
-* 🔧 Implementiral endpointa `/train` in `/predict`
-* 🧼 Implementiral logiko za predobdelavo in organizacijo slikovnih podatkov
-* 🤖 Izvedel treniranje modela z uporabo MobileNetV2
-* 💾 Poskrbel za hranjenje in ponovno nalaganje modelov
-* 🐳 Pripravil Docker okolje (Dockerfile, setup/clean skripte)
+*  Vzpostavil REST API s pomočjo Flask
+*  Implementiral endpointa `/train` in `/predict`
+*  Poskrbel za hranjenje in ponovno nalaganje modelov
+*  Pripravil Docker okolje (Dockerfile, setup/clean skripte)
 
 ## 📝 Git dnevnik
 
