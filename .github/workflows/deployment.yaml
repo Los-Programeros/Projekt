@@ -30,7 +30,7 @@ jobs:
 
     - name: Unzip negatives
       run: |
-        unzip -o negatives.zip -d negatives
+          unzip -o ./deployment/ORV/app/data/negatives.zip -d ./deployment/ORV/app/data/negatives
 
   server-setup:
     name: Server Setup
