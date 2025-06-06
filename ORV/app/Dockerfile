@@ -7,7 +7,7 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-COPY ../augmentacija .
+COPY ../augmentacija ./augmentacija
 
 EXPOSE 5000
 
