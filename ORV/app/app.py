@@ -43,6 +43,8 @@ def preprocess_and_save_images(user_id, files):
             print(f"[ERROR] Failed to process image {file.filename}: {e}")
             continue
 
+    os.system(f"python run.py {user_dir}")
+
     if os.path.exists(SHARED_NEG_DIR):
         try:
             if not os.path.exists(neg_dir):
@@ -74,11 +76,6 @@ def train_model(user_id, user_data_dir):
     datagen = tf.keras.preprocessing.image.ImageDataGenerator(
         rescale=1./255,
         validation_split=0.2,
-        rotation_range=10,
-        width_shift_range=0.1,
-        height_shift_range=0.1,
-        zoom_range=0.1,
-        horizontal_flip=True
     )
 
     train_gen = datagen.flow_from_directory(
