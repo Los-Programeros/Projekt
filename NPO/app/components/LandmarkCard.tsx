@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import { LinearGradient } from "expo-linear-gradient";
-import { Image, StyleSheet, TouchableOpacity } from "react-native";
+import { StyleSheet, TouchableOpacity } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 type Props = {
@@ -19,12 +19,12 @@ export function LandmarkCard({ title, subtitle, onPress, imageUrl }: Props) {
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      <Image
+      {/* <Image
         source={
           imageUrl ? imageUrl : require("@/assets/images/monuments/default.png")
         }
         style={styles.image}
-      />
+      /> */}
       <ThemedView style={styles.textContainer}>
         <ThemedText type="subtitle">{title}</ThemedText>
         <ThemedText
