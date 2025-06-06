@@ -28,15 +28,20 @@ jobs:
             RAIN/web-scrapper/**
             RAIN/web-scrapper/
 
-    - name: Unzip negatives
-      run: |
-          unzip -o ./deployment/ORV/app/data/negatives.zip -d ./deployment/ORV/app/data/negatives
-
   server-setup:
     name: Server Setup
     runs-on: self-hosted
     needs: server-upload
     steps:
+
+      - name: Unzip negatives
+        uses: garygrossgarten/github-action-ssh@release
+        with:
+          command: |
+            unzip -o ./deployment/ORV/app/data/negatives.zip -d ./deployment/ORV/app/data/negatives
+          host: ${{ secrets.SERVER_URL }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
 
       - name: Clean and setup containers
         uses: garygrossgarten/github-action-ssh@release
