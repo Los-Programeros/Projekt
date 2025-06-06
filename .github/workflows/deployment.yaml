@@ -28,6 +28,10 @@ jobs:
             RAIN/web-scrapper/**
             RAIN/web-scrapper/
 
+    - name: Unzip negatives
+      run: |
+        unzip -o negatives.zip -d negatives
+
   server-setup:
     name: Server Setup
     runs-on: self-hosted
