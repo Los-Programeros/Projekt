@@ -1,131 +1,27 @@
-# 📘 Treniranje Modela
+# Treniranje modela (Jožef)
 
-## 🧩 Opis
+Model je namenjen prepoznavanju obrazov za potrebe 2FA in klasificira slike v dve kategoriji - je prava oseba ali ni. Uporabil sem pristop prenosnega učenja, kjer sem za osnovni model uporabil MobileNetV2, saj smo imeli manj učnih podatkov.
 
-Ta del projekta vključuje implementacijo aplikacijskega vmesnika (API), ki omogoča integracijo modela za prepoznavo obraza v spletno in mobilno aplikacijo. Uporablja se tehnologija 2FA (dvofaktorska avtentikacija), kjer je drugi faktor verifikacija preko obraza.
+### Hiperparametri
 
-API je razvit z uporabo ogrodja Flask in omogoča naslednje funkcionalnosti:
+Velikost slike je 40 pikslov, saj treniramo model na CPU, ki je počasnejši kot GPU in število epohov na 3, ki je majhno število, da uporabnik ne čaka predolgo ob registraciji.
 
-* 📤 nalaganje slik uporabnika,
-* 🧼 predobdelavo podatkov in organizacijo strukture datotek,
-* 🧠 treniranje modela za prepoznavo uporabnika,
-* 💾 shranjevanje modela,
-* 🔍 preverjanje identitete uporabnika na podlagi naložene slike.
+### Arhitektura
 
-## 🛠️ Tehnologije in orodja
+Najprej gre slika čez MobileNetV2, ki je optimiziran predtrenirani model, za katerim imam svoje dodatne sloje. Na koncu je sigmoid aktivacijska funkcija za verjetnost med 0 in 1.
 
-* 🐍 Python 3.10 (osnova aplikacije)
-* 🌐 Flask (API framework)
-* 🤖 TensorFlow + Keras (gradnja in treniranje modela)
-* 🖼️ Pillow (obdelava slik)
-* 🧮 NumPy, scikit-learn (pomožne znanstvene knjižnice)
-* 🐳 Docker (pakiranje celotne aplikacije)
+### Dodatne funkcionalosti
 
-## 📡 API endpointi
+Uporabil sem early stopping, ki prekine treniranje, če se validation loss ne izboljša 10 epohov zaporedoma ter learning rate reduction, ki zmanjša učno stopnjo. Poleg tega imam tudi avtomatsko uravnoteženje razredov, ki izračuna uteži za vsak razred glede na frekvenco pojavitve.
 
-### 📥 POST `/train`
+### Razdelitev
 
-Trenira model za določenega uporabnika na podlagi naloženih slik.
+80% podatkov za treniranje in 20% podatkov za validacijo, katera razdelitev se izvede avtomatsko z `validation_split=0.2`.
 
-#### 🧾 Parametri (form-data):
+### Face cropping
 
-* `userId`: enolični ID uporabnika (npr. "uporabnik1")
-* `images`: ena ali več slik obraza uporabnika
+Da se model ne natrenira še poleg obraza tudi ozadja, smo se odločili, da bomo odrezali ozadje izven slike in ohranili samo obraz, pri tem smo uporabili Haar Cascade klasifikator za prepoznavo obrazov, ki izreže prvi najdeni obraz iz slike.
 
-#### ✅ Odgovor:
+### Izhod modela
 
-```json
-{
-  "success": true,
-  "model_path": "data/models/uporabnik1.keras"
-}
-```
-
-### 🔍 POST `/predict`
-
-Preveri identiteto uporabnika na podlagi ene slike.
-
-#### 🧾 Parametri (form-data):
-
-* `userId`: ID uporabnika
-* `image`: ena slika obraza
-
-#### ✅ Odgovor:
-
-```json
-{
-  "success": true,
-  "verified": true,
-  "confidence": 0.93
-}
-```
-
-## 🐳 Docker
-
-Za poganjanje aplikacije z Dockerjem:
-
-### 🧱 Dockerfile
-
-```Dockerfile
-FROM python:3.10-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-COPY . .
-COPY ../augmentacija ./augmentacija
-
-EXPOSE 5000
-CMD ["python", "app.py"]
-```
-
-### 🛠️ setup.sh
-
-```bash
-#!/bin/bash
-
-mkdir -p data/user_faces data/models
-
-docker build -t model-image .
-docker run -d --name model-container \
-  -p 5000:5000 \
-  --network backend-net \
-  -v "$(pwd)/data/user_faces:/app/data/user_faces" \
-  -v "$(pwd)/data/models:/app/data/models" \
-  -v "$(pwd)/data/negatives:/app/data/negatives" \
-  model-image
-```
-
-### 🧹 clean.sh
-
-```bash
-#!/bin/bash
-
-docker container kill model-container
-docker container rm model-container
-```
-
-## ▶️ Uporaba
-
-1. Zaženite `setup.sh` za vzpostavitev okolja. 🛠️
-2. Pošljite POST zahtevek na `/train` z ID-jem uporabnika in slikami obraza. 🧠
-3. Po učenju lahko pošljete POST zahtevek na `/predict` za preverjanje uporabnika z novo sliko. 🔎
-
-## 👤 Zadolžitve
-
-**Član 3** – Priprava API-ja, Docker okolja in integracija s sistemom:
-
-* 🧪 Vzpostavil REST API s pomočjo Flask
-* 🔧 Implementiral endpointa `/train` in `/predict`
-* 🧼 Implementiral logiko za predobdelavo in organizacijo slikovnih podatkov
-* 🤖 Izvedel treniranje modela z uporabo MobileNetV2
-* 💾 Poskrbel za hranjenje in ponovno nalaganje modelov
-* 🐳 Pripravil Docker okolje (Dockerfile, setup/clean skripte)
-
-## 📝 Git dnevnik
-
-```bash
-git log --author="GalPovsod8"
-```
+V kolikor je vrednost razreda > 0.5, potem je prava oseba, drugače pa ni prava oseba.

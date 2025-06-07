@@ -15,7 +15,7 @@ import shutil
 
 app = Flask(__name__)
 
-IMAGE_SIZE = 64
+IMAGE_SIZE = 40
 BATCH_SIZE = 16
 EPOCHS = 3
 
