@@ -22,6 +22,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
           registry: docker.io
           dockerfile: Dockerfile
-          directory: ./RAIN/mqtt-backend
           tags: mqtt-backend
           image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO }}
+        working-directory: ./RAIN/mqtt-backend
