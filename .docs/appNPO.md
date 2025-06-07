@@ -101,54 +101,123 @@ Glavna funkcionalnost aplikacije je zajemanje senzorskih podatkov in njihovo po�
 
 ---
 
-## Opis ključnih komponent in funkcionalnosti
+---
 
-### App.tsx
+## 🔨 Pregled del
 
-* Nastavi **TabNavigator** kot glavno navigacijo.
-* Zgradi globalni **AppContext** za upravljanje stanja (npr. MQTT povezava, uporabniški podatki).
+### 1. Osnovna postavitev
+- Uporabljena `expo-router` struktura.
+- V mapi `(tabs)` ustvarjeni osnovni zasloni:
+  - `index.tsx` – **Home**
+  - `run.ts` – **Run**
+  - `map.tsx` – **Map**
+  - `profile.tsx` – **Profile**
 
-### navigation/TabNavigator.tsx
+### 2. Prijava in registracija
+- Implementirana `face-login.tsx` in `face-register.tsx`.
+- Osnovna avtentikacija s pomočjo Zustand (useUserStore).
+- Obrazna avtentikacija za 2FA.
 
-* Definira tab navigacijo z 4 glavnimi zavihki:
+### 3. MQTT povezava
+- Mosquitto broker teče v **Docker vsebniku**.
+- `lib/mqttService.ts` vsebuje povezavo, `subscribe`, `publish`, reconnect logiko.
+- Uporabljene knjižnice: `mqtt`, `paho-mqtt`.
 
-  * **Home**
-  * **Run**
-  * **Map**
-  * **Profile**
-* Vsak tab je povezan s svojim zaslonom (`screens/*.tsx`).
+### 4. Run zaslon
+- Zajem podatkov iz GPS, pošiljanje preko MQTT.
+- Podatki se pošiljajo vsakih nekaj sekund.
+- Statistika poslanih sporočil.
 
-### screens/Run.tsx
+### 5. Map zaslon
+- Prikaz trenutne in drugih lokacij uporabnikov.
+- Uporabljena `react-native-maps`.
+- Prejem podatkov preko MQTT.
 
-* Aktivira zajem senzorskih podatkov (pospeškomer, GPS).
-* Uporablja `mqttClient.ts` za pošiljanje (publish) teh podatkov na Mosquitto broker.
-* Prikazuje status povezave in število poslanih sporočil.
-
-### services/mqttClient.ts
-
-* Inicializira MQTT povezavo na določen broker (Mosquitto v Dockerju).
-* Implementira metode za `publish` in `subscribe`.
-* Poskrbi za ponovno povezavo ob izgubi signala.
-
-### screens/Map.tsx
-
-* Prikaže uporabnikovo lokacijo in lokacije iz podatkov, prejetih preko MQTT.
-* Uporablja `react-native-maps` za vizualizacijo.
-
-### context/AppContext.tsx
-
-* Globalni React Context, ki hrani stanje povezave z MQTT, uporabniške podatke in zajete podatke.
-* Omogoča deljenje stanja med različnimi tabi.
+### 6. Profil in statistika
+- Prikaz opravljenih tekov.
+- Statistika: razdalje, trajanja, število znamenitosti.
+- Možnost odjave.
 
 ---
 
-## Kako deluje MQTT povezava
+### 🛰️ Kako deluje MQTT povezava
 
-1. **Mobilna naprava** se poveže na Mosquitto broker preko MQTT.
-2. Pod zaslonom **Run** se sproži periodično pošiljanje senzorskih podatkov na MQTT temo (topic).
-3. Drugi deli aplikacije (npr. **Map**) se lahko naročijo (subscribe) na MQTT teme in prikažejo prejete podatke.
-4. Povezava se upravlja centralno v `mqttClient.ts`, ki poskrbi tudi za samodejno ponovno vzpostavitev povezave.
+1. **Ustvarjanje MQTT "stor-a"** mqttService.ts
+```TypeScript
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Client, Message } from "paho-mqtt";
+import init from "react_native_mqtt";
+
+let client: any;
+let mqttendopoint: string = process.env.EXPO_PUBLIC_MQTT_BROKER_URL || "server";
+let port: number = 1883;
+
+export const mqttInit = (onMessage: (msg: any) => void) => {
+  init({
+    size: 10000,
+    storageBackend: AsyncStorage,
+    defaultExpires: 1000 * 3600 * 24,
+    enableCache: true,
+    reconnect: true,
+    sync: {},
+  });
+
+  const clientId = "id_" + parseInt(String(Math.random() * 100000));
+  client = new Client("server", 1883, "/mqtt");
+
+  client.onConnectionLost = (res: any) => {
+    console.log("Connection lost:", res.errorMessage, clientId);
+  };
+
+  client.onMessageArrived = (message: any) => {
+    console.log("Message received:", message.payloadString);
+    onMessage(message.payloadString);
+  };
+
+  client.connect({
+    onSuccess: () => {
+      console.log("Connected to MQTT broker");
+      client.subscribe("historyrun/topic", { qos: 0 });
+    },
+    onFailure: (err: any) => {
+      console.log("Failed to connect:", err);
+    },
+    useSSL: false,
+  });
+};
+
+export const sendMessage = (messageText: string) => {
+  const message = new Message(messageText);
+  message.destinationName = "historyrun/topic";
+  client.send(message);
+};
+```
+2. **Mobilna naprava** se poveže na Mosquitto broker preko MQTT.
+```TSX
+useEffect(() => {
+    mqttInit((msg) => {
+      console.log("Received MQTT message in HomeScreen:", msg);
+    });
+  }, []);
+```
+3. Pod zaslonom **Map** se sproži periodično pošiljanje senzorskih podatkov na MQTT temo (topic), ko se zgodi premik uporabnika.
+```TSX
+if (hasStarted && dest) {
+            const mqttMessage: MqttMessage = {
+              user: useUserStore.getState().user?._id,
+              date: new Date().toISOString(),
+              userActivity: useUserStore.getState().userActivity?._id,
+    coordinates: `${coords.latitude},${coords.longitude}`,
+    speed: coords.speed,
+  };
+  sendMessage(JSON.stringify(mqttMessage));
+}
+```
+5. Drugi deli aplikacije (npr. **Profile**) se lahko naročijo (subscribe) na MQTT teme in prikažejo prejete podatke.
+6. Povezava se upravlja centralno v `mqttService.ts`, ki poskrbi tudi za samodejno ponovno vzpostavitev povezave.
 
 ---
 
-Če želiš, ti lahko pripravim tudi primer konkretne kode za `mqttClient.ts` ali za posamezne zaslone/tab-e. Ali želiš, da dokumentacijo še bolj razširim?
+## ✅ Zaključek
+
+Aplikacija združuje sodobne mobilne tehnologije (Expo + MQTT) in omogoča razširljivo infrastrukturo za zbiranje in deljenje podatkov. Projekt je primeren za večje število uporabnikov in deluje kot osnova za aplikacije s področja športa, varnosti ali turističnega vodenja.
