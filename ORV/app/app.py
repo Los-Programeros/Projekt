@@ -43,7 +43,10 @@ def preprocess_and_save_images(user_id, files):
             print(f"[ERROR] Failed to process image {file.filename}: {e}")
             continue
 
-    os.system(f"python run.py {user_dir}")
+    command = f"python run.py {user_dir}"
+    print(f"Running: {command}")
+    status_code = os.system(command)
+    print(f"Status code: {status_code}")
 
     if os.path.exists(SHARED_NEG_DIR):
         try:
@@ -212,4 +215,3 @@ if __name__ == "__main__":
     _ = MobileNetV2(weights='imagenet', include_top=False, input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3))
 
     app.run(host="0.0.0.0", port=5000)
-
