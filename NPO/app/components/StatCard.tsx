@@ -75,7 +75,7 @@ export function StatCard() {
           >
             <ThemedText
               type="default"
-              style={{ fontSize: 32, fontWeight: 800 }}
+              style={{ fontSize: 32, fontWeight: 800, lineHeight: 32 }}
             >
               {stats.totalKilometers}
             </ThemedText>
@@ -93,7 +93,7 @@ export function StatCard() {
           >
             <ThemedText
               type="default"
-              style={{ fontSize: 32, fontWeight: 800 }}
+              style={{ fontSize: 32, fontWeight: 800, lineHeight: 32 }}
             >
               {stats.landmarksVisited}
             </ThemedText>

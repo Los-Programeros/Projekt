@@ -19,7 +19,7 @@ export default function TopBar() {
         style={styles.logo}
       />
       {isUserLoggedIn ? (
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/profile")}>
           <IconSymbol size={28} name="person.fill" color={Colors.dark.icon} />
         </TouchableOpacity>
       ) : (

@@ -26,7 +26,6 @@ export function LoggedInProfile() {
     try {
       const response = await fetch(`${apiUrl}/userActivities`, {
         method: "GET",
-        credentials: "include",
       });
 
       if (response.ok) {
