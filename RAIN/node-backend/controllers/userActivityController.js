@@ -22,10 +22,10 @@ module.exports = {
         }
 
         // če vračaš JSON
-        // return res.json(userActivitys);
+        return res.json(userActivitys);
 
         // če prikazuješ s handlebars
-        return res.render('userActivities', { userActivitys });
+        //return res.render('userActivities', { userActivitys });
       });
   },
 
