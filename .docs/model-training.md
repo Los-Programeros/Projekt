@@ -4,7 +4,7 @@ Model je namenjen prepoznavanju obrazov za potrebe 2FA in klasificira slike v dv
 
 ### Hiperparametri
 
-Velikost slike je 40 pikslov, saj treniramo model na CPU, ki je počasnejši kot GPU in število epohov na 3, ki je majhno število, da uporabnik ne čaka predolgo ob registraciji.
+Velikost slike je 64 pikslov, saj treniramo model na CPU, ki je počasnejši kot GPU in število epohov na 3, ki je majhno število, da uporabnik ne čaka predolgo ob registraciji.
 
 ### Arhitektura
 
