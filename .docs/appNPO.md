@@ -98,9 +98,6 @@ Ena glavnih funkcionalnosti aplikacije je zajemanje senzorskih podatkov in njiho
 ├── tsconfig.json
 └── types.d.ts
 ```
-
----
-
 ---
 
 ## 🔨 Pregled del
