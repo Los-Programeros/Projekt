@@ -1,10 +1,10 @@
-# Dokumentacija projekta: Mobilna aplikacija z Expo in MQTT
+# Dokumentacija projekta HistoryRun
 
 ## Pregled projekta
 
 Projekt je razvit z uporabo **Expo** (React Native framework), ki omogoča hitro in enostavno razvojno okolje za mobilne aplikacije na Android in iOS platformah.
 
-Glavna funkcionalnost aplikacije je zajemanje senzorskih podatkov in njihovo pošiljanje preko **MQTT protokola**. Aplikacija je razdeljena na več zaslonov (tabov):
+Ena glavnih funkcionalnosti aplikacije je zajemanje senzorskih podatkov in njihovo pošiljanje preko **MQTT protokola**. Aplikacija je razdeljena na več zaslonov (tabov):
 
 * **Home** — začetni zaslon, kjer uporabnik vidi svojo statistiko (če je vpisan) in seznam znamenitosti
 * **Run** — zaslon s seznamom vseh znamenitosti
@@ -124,18 +124,17 @@ Glavna funkcionalnost aplikacije je zajemanje senzorskih podatkov in njihovo po�
 - Uporabljene knjižnice: `mqtt`, `paho-mqtt`.
 
 ### 4. Run zaslon
-- Zajem podatkov iz GPS, pošiljanje preko MQTT.
-- Podatki se pošiljajo vsakih nekaj sekund.
-- Statistika poslanih sporočil.
+- Izbira znamenitosti
+- Pošlje podatke na **Map zaslon**
 
 ### 5. Map zaslon
 - Prikaz trenutne in drugih lokacij uporabnikov.
-- Uporabljena `react-native-maps`.
-- Prejem podatkov preko MQTT.
+- Zajem podatkov iz GPS, pošiljanje preko MQTT.
+- Podatki se pošiljajo vsakih nekaj sekund.
 
 ### 6. Profil in statistika
 - Prikaz opravljenih tekov.
-- Statistika: razdalje, trajanja, število znamenitosti.
+- Statistika: Obiskane znamenitosti, unikatne znamenitosti, število pretečenih kilometrov.
 - Možnost odjave.
 
 ---
