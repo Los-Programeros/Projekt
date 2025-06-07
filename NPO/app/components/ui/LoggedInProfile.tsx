@@ -13,84 +13,9 @@ import Toast from "react-native-toast-message";
 
 export function LoggedInProfile() {
   const toastPosition: any = Positions.toastPosition;
-  const { user, userActivity, setUserActivity } = useUserStore();
+  const { user, userActivity, stats, setUserActivity } = useUserStore();
   const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState({
-    landmarksVisited: 0,
-    totalKilometers: 0,
-    uniqueLandmarks: 0,
-  });
   const { landmarks } = useRunStore();
-
-  const calculateDistance = (
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number => {
-    const R = 6371;
-    const φ1 = (lat1 * Math.PI) / 180;
-    const φ2 = (lat2 * Math.PI) / 180;
-    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-
-    const a =
-      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c;
-  };
-
-  const calculateStats = (activity: UserActivity) => {
-    const landmarksVisited = activity.visited.length;
-    const uniqueLandmarkIds = new Set(
-      activity.visited.map((visit) => visit.landmark._id)
-    );
-    const uniqueLandmarks = uniqueLandmarkIds.size;
-
-    let totalKilometers = 0;
-    if (activity.visited.length > 1) {
-      for (let i = 1; i < activity.visited.length; i++) {
-        const prev = activity.visited[i - 1].landmark;
-        const curr = activity.visited[i].landmark;
-
-        if (!prev?.coordinates || !curr?.coordinates) {
-          continue;
-        }
-
-        try {
-          const [prevLat, prevLon] = prev.coordinates.split(",").map(Number);
-          const [currLat, currLon] = curr.coordinates.split(",").map(Number);
-
-          if (
-            isNaN(prevLat) ||
-            isNaN(prevLon) ||
-            isNaN(currLat) ||
-            isNaN(currLon)
-          ) {
-            continue;
-          }
-
-          totalKilometers += calculateDistance(
-            prevLat,
-            prevLon,
-            currLat,
-            currLon
-          );
-        } catch (error) {
-          console.log("Error parsing coordinates:", error);
-          continue;
-        }
-      }
-    }
-
-    setStats({
-      landmarksVisited,
-      totalKilometers: Math.round(totalKilometers * 100) / 100,
-      uniqueLandmarks,
-    });
-  };
 
   const fetchUserActivity = async () => {
     if (!user) return;
@@ -104,13 +29,10 @@ export function LoggedInProfile() {
         credentials: "include",
       });
 
-      console.log(response);
-
       if (response.ok) {
         const activity: UserActivity = await response.json();
         console.log("User activity fetched:", activity);
         setUserActivity(activity);
-        calculateStats(activity);
       } else {
         const err = await response.json();
         throw new Error(err.message || "Failed to fetch user activity");
@@ -130,12 +52,6 @@ export function LoggedInProfile() {
   useEffect(() => {
     if (user && !userActivity) {
       fetchUserActivity();
-    } else if (
-      userActivity &&
-      userActivity.visited &&
-      userActivity.visited.length > 0
-    ) {
-      calculateStats(userActivity);
     }
   }, [user, userActivity]);
 
@@ -219,19 +135,22 @@ export function LoggedInProfile() {
           userActivity.visited.length > 0 && (
             <ThemedView style={styles.recentSection}>
               <ThemedText type="subtitle">Recent Landmarks</ThemedText>
-              {userActivity.visited.reverse().map((visit, index) => (
-                <ThemedView
-                  key={`${visit.landmark._id}-${index}`}
-                  style={styles.recentItem}
-                >
-                  <ThemedText style={styles.landmarkName}>
-                    {getLandmarkName(visit.landmark) || "Unknown Landmark"}
-                  </ThemedText>
-                  <ThemedText style={styles.visitDate}>
-                    {new Date(visit.visitedAt).toLocaleDateString()}
-                  </ThemedText>
-                </ThemedView>
-              ))}
+              {userActivity.visited
+                .slice()
+                .reverse()
+                .map((visit, index) => (
+                  <ThemedView
+                    key={`${visit.landmark._id}-${index}`}
+                    style={styles.recentItem}
+                  >
+                    <ThemedText style={styles.landmarkName}>
+                      {getLandmarkName(visit.landmark) || "Unknown Landmark"}
+                    </ThemedText>
+                    <ThemedText style={styles.visitDate}>
+                      {new Date(visit.visitedAt).toLocaleDateString()}
+                    </ThemedText>
+                  </ThemedView>
+                ))}
             </ThemedView>
           )}
 

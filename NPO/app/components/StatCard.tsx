@@ -7,7 +7,7 @@ import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
 export function StatCard() {
-  const user = useUserStore((state) => state.user);
+  const { user, stats } = useUserStore();
 
   if (!user) {
     return (
@@ -77,7 +77,7 @@ export function StatCard() {
               type="default"
               style={{ fontSize: 32, fontWeight: 800 }}
             >
-              30000
+              {stats.totalKilometers}
             </ThemedText>
             <ThemedText style={{ fontSize: 16, fontWeight: 800 }}>
               km
@@ -95,7 +95,7 @@ export function StatCard() {
               type="default"
               style={{ fontSize: 32, fontWeight: 800 }}
             >
-              12
+              {stats.landmarksVisited}
             </ThemedText>
             <ThemedText style={{ fontSize: 16, fontWeight: "800" }}>
               sites
