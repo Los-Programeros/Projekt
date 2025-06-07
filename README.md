@@ -1,36 +1,36 @@
-# ZA UPORABNIKE
-# 🏃‍♂️ HISTORY RUN
+# History Run - Los Programeros - Projekt pri R-IT 2025
 
-## Zakaj *History Run*?  
-👟 Športanje in spoznavanje mesta hkrati – zabavno in poučno!
+# Dokumentacija aplikacije
 
----
+## Kako deluje?
 
-## Kako uporabljati?
+1. **Odpri aplikacijo** in se registriraj z uporabniškim imenom, geslom in e-pošto. 
+   Slikaj se 5x za 2FA, kar bo natreniralo model za tvoj obraz.  
+   Če si že registriran, se samo prijavi z uporabniškim imenom, geslom in se slikaj za avtentikacijo.
 
-1. **Odpri aplikacijo** in se registriraj z uporabniškim imenom, geslom in e-pošto. 📧  
-   Poslikaj se za 2FA in že si prijavljen!  
-   Če si že registriran, se samo prijavi z uporabniškim imenom, geslom in se poslikaj, da potrdimo tvojo identiteto. 📸
+2. Spodaj v orodni vrstici klikni na **Run** in izberi, kam bi rad tekel.
 
-2. Spodaj v orodni vrstici klikni na **Run** 🏃‍♀️ in izberi, kam bi rad tekel.
+3. Če ti je lokacija všeč, klikni na **Začni aktivnost** in teci!
 
-3. Če ti je lokacija všeč, klikni na **Začni aktivnost** ▶️ in teci! 🗺️
+4. Ko prispeš na lokacijo, se tvoja športna aktivnost shrani.
 
-4. Ko prispeš na lokacijo, se poslikaj, objavi na Instagramu 📲 in pošlji prijateljem! 🎉
+# Tehnična dokumentacija
 
----
+## Namestitev
 
-## Kako se odjaviti?  
-Klikni na gumbek **Logout** 🔒 v zgornjem desnem kotu zaslona.
----
+### Avtomatska
 
-**Ekipa History Run**  
-👨‍💻 Jan, 🧔 Jože in 👦 Gal
+Namestitev in posodobitev potekata avtomatsko prek GitHub Actions, ko se koda prenese v main vejo.
 
-# ZA DEVELOPERJE
-# History Run - Los Programeros
+### Ročna
 
-## Storitve
+Strežnik se lahko postavi tudi ročno:  
+1. Prenesi projekt iz Githuba.
+2. Razpakiraj slike iz negatives.zip, ki se nahaja v ORV/app/data v mapo negatives, ki se nahaja v istem direktoriju.
+3. V bash lupini zaženi `server-setup.sh` za nastavitev okolja.
+4. Opcijsko: zaženi `server-clean.sh` za čiščenje okolja.
+
+## Docker zabojniki, ki tečejo ob vzpostavitvi
 
 - **MongoDB** (`27017`)
 - **Mosquitto Broker** (`1883`)
@@ -38,16 +38,7 @@ Klikni na gumbek **Logout** 🔒 v zgornjem desnem kotu zaslona.
 - **MQTT Backend** – Posreduje sporočila iz Mosquitto brokerja v Node.js strežnik.
 - **Node.js Strežnik** (`3000`)
 
-## Namestitev
-
-Namestitev in posodobitev potekata avtomatsko prek GitHub Actions, ko se koda prenese v main vejo.
-
-## Skripte
-
-- `server-setup.sh` – nastavitev okolja.
-- `server-clean.sh` – čiščenje okolja.
-
-## Sturktura projekta
+## Struktura projekta
 
 Projekt je zgrajen v treh večjih mapah, ki so povezane z vsakim predmetom. V vsaki mapi se nahajajo mapice ki so zapisane spodaj in opisane v linkih:
 
@@ -65,3 +56,17 @@ Projekt je zgrajen v treh večjih mapah, ki so povezane z vsakim predmetom. V vs
 - [MQTT Backend](.docs/mqtt-backend.md)
 - [Node Backend](.docs/node-backend.md)
 - [Web Scraper](.docs/web-scraper.md)
+
+### Dodatno: 4. Sistemska administracija
+
+#### Uporaba Dockerja
+
+Jan - kontejnerizacija `Node strežnika`  
+Jožef - kontejnerizacija `mqtt-backenda`  
+Gal - kontejnerizacija `modela`
+
+#### CI/CD cevovod 
+
+Jan - avtomatski test za MQTT  
+Jožef - [avtomatski deployment](.docs/deployment.md), avtomatski test za MongoDB    
+Gal - avtomatski test za Node
