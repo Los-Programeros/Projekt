@@ -65,7 +65,7 @@ export default function MapScreen() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const mapRef = useRef<MapView>(null);
-  const ARRIVAL_THRESHOLD = 20;
+  const ARRIVAL_THRESHOLD = 20000000;
 
   const resetMapState = useCallback(() => {
     setRouteCoords([]);
