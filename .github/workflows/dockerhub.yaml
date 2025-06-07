@@ -15,7 +15,7 @@ jobs:
       - name: Get project from Github
         uses: actions/checkout@v4
       
-      - name: Build and push MQTT Backend
+      - name: Build and push -> MQTT Backend
         uses: mr-smithers-excellent/docker-build-push@v6
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -24,4 +24,26 @@ jobs:
           dockerfile: ./RAIN/mqtt-backend/Dockerfile
           directory: ./RAIN/mqtt-backend
           tags: mqtt-backend
+          image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO }}
+
+      - name: Build and push -> Model
+        uses: mr-smithers-excellent/docker-build-push@v6
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          registry: docker.io
+          dockerfile: ./ORV/app/Dockerfile
+          directory: ./ORV/app
+          tags: model
+          image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO }}
+
+      - name: Build and push -> Node
+        uses: mr-smithers-excellent/docker-build-push@v6
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          registry: docker.io
+          dockerfile: ./RAIN/node-backend/Dockerfile
+          directory: ./RAIN/node-backend
+          tags: node
           image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO }}
