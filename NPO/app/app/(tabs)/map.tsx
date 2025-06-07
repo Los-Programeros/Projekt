@@ -95,13 +95,13 @@ export default function MapScreen() {
         {
           accuracy: Location.Accuracy.High,
           timeInterval: 500,
-          distanceInterval: 2,
+          distanceInterval: 0.5,
         },
         (location) => {
           const coords = location.coords;
           setLoc(coords);
 
-          if (hasStarted && dest) {
+          if (hasStarted && dest && !hasReachedDestination) {
             const mqttMessage: MqttMessage = {
               user: useUserStore.getState().user?._id,
               date: new Date().toISOString(),
