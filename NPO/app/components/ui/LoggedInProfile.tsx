@@ -26,12 +26,18 @@ export function LoggedInProfile() {
     try {
       const response = await fetch(`${apiUrl}/userActivities`, {
         method: "GET",
+        credentials: "include",
       });
 
       if (response.ok) {
-        const activity: UserActivity = await response.json();
-        console.log("User activity fetched:", activity);
-        setUserActivity(activity);
+        const activities: UserActivity[] = await response.json();
+        const currentActivity = activities.find((a) => a.user._id === user._id);
+
+        if (currentActivity) {
+          setUserActivity(currentActivity);
+        } else {
+          setUserActivity({ user, visited: [] }); // fallback
+        }
       } else {
         const err = await response.json();
         throw new Error(err.message || "Failed to fetch user activity");
@@ -49,13 +55,14 @@ export function LoggedInProfile() {
   };
 
   useEffect(() => {
-    if (user && !userActivity) {
+    if (user) {
       fetchUserActivity();
     }
-  }, [user, userActivity]);
+  }, [user]);
 
-  const getLandmarkName = (landmarkId: string): string | undefined => {
-    return landmarks.find((lm) => lm._id === landmarkId)?.name;
+  const getLandmarkName = (landmark: any): string | undefined => {
+    const id = typeof landmark === "string" ? landmark : landmark?._id;
+    return landmarks.find((lm) => lm._id === id)?.name;
   };
 
   const logout = async () => {
