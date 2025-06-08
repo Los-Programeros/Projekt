@@ -38,13 +38,15 @@ Strežnik se lahko postavi tudi ročno:
 - **MQTT Backend** – Posreduje sporočila iz Mosquitto brokerja v Node.js strežnik.
 - **Node.js Strežnik** (`3000`)
 
+Vsi zabojniki so povezani znotraj enega omrežja imenovanega `backend-net`
+
 ## Struktura projekta
 
 Projekt je zgrajen v treh večjih mapah, ki so povezane z vsakim predmetom. V vsaki mapi se nahajajo mapice ki so zapisane spodaj in opisane v linkih:
 
 ### 1. NPO (namenska programska oprema)
 - [App](.docs/appNPO.md)
-- [MQTT](.docs/mqtt.md)
+- [Mosquitto Broker](.docs/mqtt.md)
 
 ### 2. ORV (osnove računalniškega vida)
 - [App](.docs/appORV.md)
