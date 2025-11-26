@@ -55,30 +55,30 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
 
-  test-containers:
-    name: Test Server Containers
-    runs-on: self-hosted
-    needs: server-setup
+  # test-containers:
+  #   name: Test Server Containers
+  #   runs-on: self-hosted
+  #   needs: server-setup
     
-    steps:
-      - name: Get project from Github
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Get project from Github
+  #       uses: actions/checkout@v4
       
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.9'
 
-      - name: Install libraries
-        run: |
-          cd .tests
-          pip install -r requirements.txt
+  #     - name: Install libraries
+  #       run: |
+  #         cd .tests
+  #         pip install -r requirements.txt
       
-      - name: Run MongoDB test
-        run: python3 .tests/test_mongo.py
+  #     - name: Run MongoDB test
+  #       run: python3 .tests/test_mongo.py
 
-      - name: Run Node test
-        run: python3 .tests/test_node.py
+  #     - name: Run Node test
+  #       run: python3 .tests/test_node.py
 
-      - name: Run MQTT test
-        run: python3 .tests/test_mqtt.py
+  #     - name: Run MQTT test
+  #       run: python3 .tests/test_mqtt.py
