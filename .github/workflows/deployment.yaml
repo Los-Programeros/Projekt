@@ -20,14 +20,11 @@ jobs:
         host: ${{ secrets.SERVER_URL }}
         username: ${{ secrets.SSH_USERNAME }}
         password: ${{ secrets.SSH_PASSWORD }}
-        source: "./"
+        source: "./*,!.git,!.github,!NPO/app,!RAIN/web-scrapper"
         target: "./deployment/"
         rm: false
         strip_components: 0
         overwrite: true
-        excludes: |
-          NPO/app/**
-          RAIN/web-scrapper/**
 
   server-setup:
     name: Server Setup
