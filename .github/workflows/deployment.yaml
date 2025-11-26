@@ -14,17 +14,13 @@ jobs:
     - name: Get project from Github
       uses: actions/checkout@v4
     
-    - name: Fix file permissions
-      run: |
-        chmod 644 NPO/mosquitto/mosquitto/config/mosquitto.conf
-    
     - name: Upload files
       uses: appleboy/scp-action@v0.1.4
       with:
         host: ${{ secrets.SERVER_URL }}
         username: ${{ secrets.SSH_USERNAME }}
         password: ${{ secrets.SSH_PASSWORD }}
-        source: "./*,!.git,!.github,!NPO/app,!RAIN/web-scrapper"
+        source: "./*,!.git,!.github,!NPO/app,!RAIN/web-scrapper,!NPO/mosquitto/mosquitto/config/mosquitto.conf"
         target: "./deployment/"
         rm: false
         strip_components: 0
