@@ -13,11 +13,11 @@ jobs:
     steps:
     - name: Get project from Github
       uses: actions/checkout@v4
-
-    - name: Set file permissions
+    
+    - name: Fix file permissions
       run: |
-        chmod -R 755 .
-        find . -type f -exec chmod 644 {} \;
+        sudo chmod -R u+rwX,go+rX .
+        sudo chown -R $(whoami):$(whoami) .
     
     - name: Upload files
       uses: appleboy/scp-action@v0.1.4
@@ -50,6 +50,7 @@ jobs:
         uses: garygrossgarten/github-action-ssh@release
         with:
           command: |
+            export PATH=$PATH:/usr/bin:/usr/local/bin
             cd ./deployment/
             bash server-clean.sh
             bash server-setup.sh
