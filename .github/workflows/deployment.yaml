@@ -16,8 +16,7 @@ jobs:
     
     - name: Fix file permissions
       run: |
-        sudo chmod -R u+rwX,go+rX .
-        sudo chown -R $(whoami):$(whoami) .
+        chmod 644 NPO/mosquitto/mosquitto/config/mosquitto.conf
     
     - name: Upload files
       uses: appleboy/scp-action@v0.1.4
