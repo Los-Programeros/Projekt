@@ -14,21 +14,21 @@ jobs:
     - name: Get project from Github
       uses: actions/checkout@v4
     
-    - name: Fix file permissions
+    - name: Install upload tools
       run: |
-        chmod 644 NPO/mosquitto/mosquitto/config/mosquitto.conf
-    
-    - name: Upload files
-      uses: appleboy/scp-action@v0.1.4
-      with:
-        host: ${{ secrets.SERVER_URL }}
-        username: ${{ secrets.SSH_USERNAME }}
-        password: ${{ secrets.SSH_PASSWORD }}
-        source: "./*,!.git,!.github,!NPO/app,!RAIN/web-scrapper"
-        target: "./deployment/"
-        rm: false
-        strip_components: 0
-        overwrite: true
+        if ! command -v sshpass &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y sshpass rsync
+        fi
+
+    - name: Upload files via Rsync
+      run: |
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" rsync -avz --delete \
+          --exclude='.git' \
+          --exclude='.github' \
+          --exclude='NPO/app' \
+          --exclude='RAIN/web-scrapper' \
+          --no-perms --no-owner --no-group \
+          ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.SERVER_URL }}:./deployment/
 
   server-setup:
     name: Server Setup
