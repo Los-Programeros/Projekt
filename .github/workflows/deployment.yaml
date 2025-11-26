@@ -13,6 +13,11 @@ jobs:
     steps:
     - name: Get project from Github
       uses: actions/checkout@v4
+
+    - name: Set file permissions
+      run: |
+        chmod -R 755 .
+        find . -type f -exec chmod 644 {} \;
     
     - name: Upload files
       uses: appleboy/scp-action@v0.1.4
