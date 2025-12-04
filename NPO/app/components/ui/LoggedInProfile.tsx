@@ -1,19 +1,73 @@
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { Positions } from "@/constants/Positions";
+import { useRunStore } from "@/store/useRunStore";
 import { useUserStore } from "@/store/useUserStore";
+import { UserActivity } from "@/types";
 import { Button } from "@react-navigation/elements";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import Toast from "react-native-toast-message";
-import ParallaxScrollView from "../ParallaxScrollView";
-import { ThemedText } from "../ThemedText";
-import { ThemedView } from "../ThemedView";
-
-//zdaj si v pravem: SCRUM-56-Uporabniški-profil - TODO
 
 export function LoggedInProfile() {
   const toastPosition: any = Positions.toastPosition;
-  const { user } = useUserStore();
+  const { user, userActivity, stats, setUserActivity } = useUserStore();
+  const [loading, setLoading] = useState(false);
+  const { landmarks } = useRunStore();
 
-  let logout = async () => {
+  const fetchUserActivity = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
+    try {
+      const response = await fetch(`${apiUrl}/userActivities`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const activities: UserActivity[] = await response.json();
+        const currentActivity = activities.find((a) => a.user._id === user._id);
+
+        if (currentActivity) {
+          setUserActivity(currentActivity);
+        } else {
+          setUserActivity({
+            user, visited: [],
+            _id: ""
+          });
+        }
+      } else {
+        const err = await response.json();
+        throw new Error(err.message || "Failed to fetch user activity");
+      }
+    } catch (err: any) {
+      Toast.show({
+        type: "error",
+        text1: "Failed to load stats",
+        text2: err.message || "An error occurred",
+        position: toastPosition,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchUserActivity();
+    }
+  }, [user]);
+
+  const getLandmarkName = (landmark: any): string | undefined => {
+    const id = typeof landmark === "string" ? landmark : landmark?._id;
+    return landmarks.find((lm) => lm._id === id)?.name;
+  };
+
+  const logout = async () => {
     const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
     try {
@@ -44,21 +98,164 @@ export function LoggedInProfile() {
   };
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "transparent", dark: "transparent" }}
-    >
-      <ThemedText type="title">{`Hello, ${user?.username}`}</ThemedText>
-      <ThemedView style={{ gap: 16 }}>
-        <ThemedText type="subtitle">Stats</ThemedText>
+    <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ThemedView style={styles.header}>
+        <ThemedText type="title" style={styles.greeting}>{`Hello, ${user?.username}!`}</ThemedText>
+      </ThemedView>
+
+      <ThemedView style={styles.container}>
+        <ThemedText type="subtitle" style={styles.sectionTitle}>Your Running Stats</ThemedText>
+
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <ThemedText style={styles.loadingText}>Loading stats...</ThemedText>
+          </View>
+        ) : (
+          <ThemedView style={styles.statsContainer}>
+            <ThemedView style={styles.statCard}>
+              <ThemedText style={styles.statNumber}>
+                {stats.landmarksVisited}
+              </ThemedText>
+              <ThemedText style={styles.statLabel}>Total Visits</ThemedText>
+            </ThemedView>
+
+            <ThemedView style={styles.statCard}>
+              <ThemedText style={styles.statNumber}>
+                {stats.uniqueLandmarks}
+              </ThemedText>
+              <ThemedText style={styles.statLabel}>Unique Landmarks</ThemedText>
+            </ThemedView>
+
+            <ThemedView style={styles.statCard}>
+              <ThemedText style={styles.statNumber}>
+                {stats.totalKilometers}
+              </ThemedText>
+              <ThemedText style={styles.statLabel}>
+                KM Traveled
+              </ThemedText>
+            </ThemedView>
+          </ThemedView>
+        )}
+
+        {userActivity &&
+          userActivity.visited &&
+          userActivity.visited.length > 0 && (
+            <ThemedView style={styles.recentSection}>
+              <ThemedText type="subtitle" style={styles.sectionTitle}>Recent Landmarks</ThemedText>
+              {userActivity.visited
+                .slice()
+                .reverse()
+                .slice(0, 5)
+                .map((visit, index) => (
+                  <ThemedView
+                    key={`${visit.landmark._id}-${index}`}
+                    style={styles.recentItem}
+                  >
+                    <ThemedText style={styles.landmarkName}>
+                      {getLandmarkName(visit.landmark) || "Unknown Landmark"}
+                    </ThemedText>
+                    <ThemedText style={styles.visitDate}>
+                      {new Date(visit.visitedAt).toLocaleDateString()}
+                    </ThemedText>
+                  </ThemedView>
+                ))}
+            </ThemedView>
+          )}
+
         <Button
           variant="filled"
           color={Colors.primary}
-          style={{ borderRadius: 16, paddingVertical: 16 }}
+          style={styles.logoutButton}
           onPress={logout}
         >
           Logout
         </Button>
       </ThemedView>
-    </ParallaxScrollView>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  header: {
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  greeting: {
+    fontSize: 28,
+  },
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+    gap: 24,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    marginBottom: 8,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    paddingVertical: 32,
+  },
+  loadingText: {
+    marginTop: 12,
+    opacity: 0.7,
+  },
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: Colors.primary + "15",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.primary + "30",
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: Colors.primary,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    opacity: 0.8,
+    textAlign: "center",
+  },
+  recentSection: {
+    gap: 12,
+  },
+  recentItem: {
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: Colors.primary + "10",
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.primary,
+  },
+  landmarkName: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  visitDate: {
+    fontSize: 12,
+    opacity: 0.6,
+  },
+  logoutButton: {
+    borderRadius: 16,
+    paddingVertical: 16,
+    marginTop: 8,
+  },
+});

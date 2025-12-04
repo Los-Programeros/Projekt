@@ -1,22 +1,31 @@
+from mpi4py import MPI
 import cv2, numpy as np, uuid, random
 from pathlib import Path
 import sys
 
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+size = comm.Get_size()
+
 if len(sys.argv) != 2:
-    print("Error: Directory path argument required")
+    if rank == 0:
+        print("Error: Directory path argument required")
     sys.exit(1)
 
 src_dir = Path(sys.argv[1])
 
-try:
-    resolved_source = src_dir.resolve()
-    print(f"Looking for images in: {resolved_source}")
-    if not src_dir.exists() or not src_dir.is_dir():
-        print(f"Error: Source folder '{resolved_source}' not found")
+if rank == 0:
+    try:
+        resolved_source = src_dir.resolve()
+        print(f"Looking for images in: {resolved_source}")
+        if not src_dir.exists() or not src_dir.is_dir():
+            print(f"Error: Source folder '{resolved_source}' not found")
+            sys.exit(1)
+    except Exception as e:
+        print(f"Error resolving directory: {e}")
         sys.exit(1)
-except Exception as e:
-    print(f"Error resolving directory: {e}")
-    sys.exit(1)
+
+comm.Barrier()
 
 def rand_brightness_contrast(img):
     a = random.uniform(0.6, 1.4)
@@ -51,7 +60,18 @@ def occlusion_patch(img):
 
 augs = [rand_brightness_contrast, micro_rotate, flip_shift, occlusion_patch]
 
-for src in src_dir.glob("*.jpg"):
+if rank == 0:
+    all_images = list(src_dir.glob("*.jpg"))
+    chunks = np.array_split(all_images, size)
+else:
+    chunks = None
+
+my_images = comm.scatter(chunks, root=0)
+
+if rank == 0:
+    print(f"Total images: {len(all_images)}, splitting across {size} processes")
+
+for src in my_images:
     img = cv2.imread(str(src))
     if img is None:
         continue
@@ -60,3 +80,8 @@ for src in src_dir.glob("*.jpg"):
         out = f(img)
         name = f"{stem}_{f.__name__}_{uuid.uuid4().hex[:6]}.jpg"
         cv2.imwrite(str(src_dir / name), out, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+
+comm.Barrier()
+
+if rank == 0:
+    print(f"Augmentation complete on {size} processes")

@@ -1,8 +1,7 @@
-import { Colors } from "@/constants/Colors";
-import { LinearGradient } from "expo-linear-gradient";
-import { Image, StyleSheet, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "./ThemedText";
-import { ThemedView } from "./ThemedView";
+
 type Props = {
   title: string;
   subtitle: string;
@@ -12,58 +11,47 @@ type Props = {
 
 export function LandmarkCard({ title, subtitle, onPress, imageUrl }: Props) {
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
-      <LinearGradient
-        colors={["#FF6B35", "#994020"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <Image
-        source={
-          imageUrl ? imageUrl : require("@/assets/images/monuments/default.png")
-        }
-        style={styles.image}
-      />
-      <ThemedView style={styles.textContainer}>
-        <ThemedText type="subtitle">{title}</ThemedText>
-        <ThemedText
-          style={styles.subtitle}
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          {subtitle}
-        </ThemedText>
-      </ThemedView>
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
+      <View style={styles.content}>
+        <View style={styles.textContainer}>
+          <ThemedText style={styles.title}>{title}</ThemedText>
+          <ThemedText style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">
+            {subtitle}
+          </ThemedText>
+        </View>
+        <Ionicons name="chevron-forward" size={24} color="#999" />
+      </View>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: "row",
-    padding: 12,
-    borderRadius: 8,
-    borderColor: Colors.white,
+    backgroundColor: "#1a1a1a",
+    borderRadius: 12,
+    marginBottom: 12,
     borderWidth: 1,
-    marginBottom: 16,
+    borderColor: "#333",
     overflow: "hidden",
   },
-  image: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 12,
-    borderColor: Colors.white,
-    borderWidth: 1,
+  content: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
   },
   textContainer: {
     flex: 1,
-    backgroundColor: "transparent",
+    marginRight: 12,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+    marginBottom: 4,
   },
   subtitle: {
-    color: Colors.dark.textShade,
-    fontSize: 12,
-    marginTop: 4,
+    fontSize: 14,
+    color: "#999",
   },
 });

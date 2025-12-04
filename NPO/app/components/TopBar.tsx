@@ -19,8 +19,8 @@ export default function TopBar() {
         style={styles.logo}
       />
       {isUserLoggedIn ? (
-        <TouchableOpacity>
-          <IconSymbol size={28} name="bell.fill" color={Colors.dark.icon} />
+        <TouchableOpacity onPress={() => router.push("/profile")}>
+          <IconSymbol size={28} name="person.fill" color={Colors.dark.icon} />
         </TouchableOpacity>
       ) : (
         <TouchableOpacity onPress={() => router.push("/profile")}>
@@ -42,10 +42,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: Colors.dark.background,
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
+    position: "relative",
     zIndex: 100,
   },
   logo: {

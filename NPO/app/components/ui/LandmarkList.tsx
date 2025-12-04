@@ -1,5 +1,4 @@
 import { LandmarkCard } from "@/components/LandmarkCard";
-import { Colors } from "@/constants/Colors";
 import { useRunStore } from "@/store/useRunStore";
 import { useUserStore } from "@/store/useUserStore";
 import { useRouter } from "expo-router";
@@ -9,11 +8,13 @@ import {
   Alert,
   FlatList,
   Platform,
-  StyleSheet,
   ToastAndroid,
+  View,
 } from "react-native";
+import { ThemedText } from "@/components/ThemedText";
+import { StatCard } from "@/components/StatCard";
 
-export function LandmarksList() {
+export function LandmarksList({ showHeader = false, showStats = false }) {
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   const { landmarks, setLandmarks } = useRunStore();
   const [loading, setLoading] = useState(true);
@@ -31,7 +32,7 @@ export function LandmarksList() {
     } else {
       setLoading(false);
     }
-  }, [landmarks.length, setLandmarks]);
+  }, [apiUrl, landmarks.length, setLandmarks]);
 
   if (loading) {
     return <ActivityIndicator style={{ flex: 1 }} size="large" />;
@@ -41,6 +42,17 @@ export function LandmarksList() {
     <FlatList
       data={landmarks}
       keyExtractor={(item) => item._id}
+      ListHeaderComponent={
+        showHeader ? (
+          <View>
+            {showStats && <StatCard />}
+            <ThemedText type="title" style={{ marginBottom: 16, marginTop: 24 }}>
+              The Landmarks
+            </ThemedText>
+          </View>
+        ) : null
+      }
+      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
       renderItem={({ item }) => (
         <LandmarkCard
           title={item.name}
@@ -92,14 +104,3 @@ export function LandmarksList() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  item: {
-    backgroundColor: Colors.primary,
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  name: { fontSize: 16, fontWeight: "bold", color: "white" },
-  cat: { fontSize: 12, color: "white", marginTop: 4 },
-});
