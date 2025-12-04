@@ -80,12 +80,13 @@ export function AuthForm() {
             style={{
               textAlign: "center",
               fontSize: 64,
-              height: 64,
+              lineHeight: 64,
               paddingTop: 8,
             }}
           >
             {mode === "login" ? "Login" : "Register"}
           </ThemedText>
+
           <ThemedView style={styles.formContainer}>
             <ThemedView style={styles.formContainer_inputs}>
               <ThemedView style={styles.formContainer_inputs_inputGroup}>

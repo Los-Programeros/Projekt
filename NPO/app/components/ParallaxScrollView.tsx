@@ -13,7 +13,7 @@ import { spacing } from "@/constants/Spacing";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { LinearGradient } from "expo-linear-gradient";
 
-const HEADER_HEIGHT = 350;
+const HEADER_HEIGHT = 250;
 
 type Props = PropsWithChildren<{
   headerImage?: ReactElement;

@@ -47,13 +47,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: "bold",
+    fontWeight: "800",
     lineHeight: 32,
     fontFamily: "Figtree",
   },
   subtitle: {
     fontSize: 20,
-    fontWeight: "bold",
+    fontWeight: "800",
     fontFamily: "Figtree",
   },
   link: {
