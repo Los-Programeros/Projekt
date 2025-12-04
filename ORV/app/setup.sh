@@ -2,6 +2,9 @@
 
 mkdir -p data/user_faces data/models
 
+docker network inspect backend-net >/dev/null 2>&1 || \
+  docker network create backend-net
+
 docker build -t model-image .
 docker run -d --name model-container \
   -p 5000:5000 \

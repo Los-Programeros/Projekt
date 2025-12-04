@@ -43,7 +43,7 @@ def preprocess_and_save_images(user_id, files):
             print(f"[ERROR] Failed to process image {file.filename}: {e}")
             continue
 
-    command = f"python run.py {user_dir}"
+    command = f"python process_images.py {user_dir}"
     print(f"Running: {command}")
     status_code = os.system(command)
     print(f"Status code: {status_code}")

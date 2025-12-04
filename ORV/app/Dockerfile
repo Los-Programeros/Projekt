@@ -8,13 +8,15 @@ RUN pip install -r requirements.txt
 COPY . .
 
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
     libxrender-dev \
-    libgomp1
+    libgomp1 \
+    openmpi-bin \
+    libopenmpi-dev
 
 EXPOSE 5000
 
-CMD ["python", "app.py"]
+CMD ["python", "server.py"]
