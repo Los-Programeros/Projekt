@@ -1,4 +1,3 @@
-import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
@@ -8,7 +7,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { UserActivity } from "@/types";
 import { Button } from "@react-navigation/elements";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import Toast from "react-native-toast-message";
 
 export function LoggedInProfile() {
@@ -36,7 +35,10 @@ export function LoggedInProfile() {
         if (currentActivity) {
           setUserActivity(currentActivity);
         } else {
-          setUserActivity({ user, visited: [] }); // fallback
+          setUserActivity({
+            user, visited: [],
+            _id: ""
+          });
         }
       } else {
         const err = await response.json();
@@ -96,13 +98,13 @@ export function LoggedInProfile() {
   };
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "transparent", dark: "transparent" }}
-    >
-      <ThemedText type="title">{`Hello, ${user?.username}`}</ThemedText>
+    <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ThemedView style={styles.header}>
+        <ThemedText type="title" style={styles.greeting}>{`Hello, ${user?.username}!`}</ThemedText>
+      </ThemedView>
 
       <ThemedView style={styles.container}>
-        <ThemedText type="subtitle">Your Running Stats</ThemedText>
+        <ThemedText type="subtitle" style={styles.sectionTitle}>Your Running Stats</ThemedText>
 
         {loading ? (
           <View style={styles.loadingContainer}>
@@ -127,10 +129,10 @@ export function LoggedInProfile() {
 
             <ThemedView style={styles.statCard}>
               <ThemedText style={styles.statNumber}>
-                {stats.totalKilometers} km
+                {stats.totalKilometers}
               </ThemedText>
               <ThemedText style={styles.statLabel}>
-                Distance Traveled
+                KM Traveled
               </ThemedText>
             </ThemedView>
           </ThemedView>
@@ -140,10 +142,11 @@ export function LoggedInProfile() {
           userActivity.visited &&
           userActivity.visited.length > 0 && (
             <ThemedView style={styles.recentSection}>
-              <ThemedText type="subtitle">Recent Landmarks</ThemedText>
+              <ThemedText type="subtitle" style={styles.sectionTitle}>Recent Landmarks</ThemedText>
               {userActivity.visited
                 .slice()
                 .reverse()
+                .slice(0, 5)
                 .map((visit, index) => (
                   <ThemedView
                     key={`${visit.landmark._id}-${index}`}
@@ -169,13 +172,34 @@ export function LoggedInProfile() {
           Logout
         </Button>
       </ThemedView>
-    </ParallaxScrollView>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  header: {
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  greeting: {
+    fontSize: 28,
+  },
   container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
     gap: 24,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    marginBottom: 8,
   },
   loadingContainer: {
     alignItems: "center",
@@ -216,7 +240,7 @@ const styles = StyleSheet.create({
   recentItem: {
     padding: 12,
     borderRadius: 8,
-    backgroundColor: Colors.light.background + "05",
+    backgroundColor: Colors.primary + "10",
     borderLeftWidth: 3,
     borderLeftColor: Colors.primary,
   },
@@ -224,11 +248,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 4,
-  },
-  landmarkCategory: {
-    fontSize: 14,
-    opacity: 0.7,
-    marginBottom: 2,
   },
   visitDate: {
     fontSize: 12,

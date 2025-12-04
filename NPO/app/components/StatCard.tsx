@@ -18,17 +18,13 @@ export function StatCard() {
           end={{ x: 0, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
-          <TouchableOpacity onPress={() => router.push("/profile")}>
-            <ThemedText
-              type="link"
-              style={{ color: "white", fontWeight: "800", fontSize: 32 }}
-            >
-              Log In
-            </ThemedText>
-          </TouchableOpacity>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 32 }}>
+          <ThemedText type="title" style={{ color: "white", fontSize: 24, textAlign: "center", marginBottom: 8 }}>
+            Track Your Progress
+          </ThemedText>
+          <ThemedText style={{ color: "rgba(255,255,255,0.8)", fontSize: 16, textAlign: "center" }}>
+            Log in to see your running stats and visited landmarks
+          </ThemedText>
         </View>
       </ThemedView>
     );
