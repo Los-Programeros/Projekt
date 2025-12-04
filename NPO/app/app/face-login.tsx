@@ -8,6 +8,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
+import * as ImageManipulator from 'expo-image-manipulator';
 
 export default function FaceLogin() {
   const { username, password } = useLocalSearchParams<{
@@ -29,11 +30,17 @@ export default function FaceLogin() {
     try {
       const photo: CameraCapturedPicture =
         await cameraRef.current.takePictureAsync({
-          base64: true,
+          base64: false,
           quality: 0.3,
         });
 
-      const imageBase64 = photo.base64;
+      const manipulated = await ImageManipulator.manipulateAsync(
+        photo.uri,
+        [{ resize: { width: photo.width } }],
+        { base64: true, compress: 0.3 }
+      );
+
+      const imageBase64 = manipulated.base64;
 
       const loginRes = await fetch(`${apiUrl}/users/login`, {
         method: "POST",

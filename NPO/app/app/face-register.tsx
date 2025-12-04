@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
+import * as ImageManipulator from 'expo-image-manipulator';
 
 export default function FaceRegister() {
   const { username, email, password } = useLocalSearchParams<{
@@ -33,13 +34,19 @@ export default function FaceRegister() {
 
     try {
       const photo = await cameraRef.current.takePictureAsync({
-        base64: true,
+        base64: false,
         quality: 0.3,
       });
 
-      if (!photo.base64) throw new Error("Failed to capture image.");
+      const manipulated = await ImageManipulator.manipulateAsync(
+        photo.uri,
+        [{ resize: { width: photo.width } }],
+        { base64: true, compress: 0.3 }
+      );
 
-      const updatedImages = [...images, photo.base64];
+      if (!manipulated.base64) throw new Error("Failed to capture image.");
+
+      const updatedImages = [...images, manipulated.base64];
       setImages(updatedImages);
 
       if (currentStep < directions.length - 1) {
