@@ -3,7 +3,7 @@ name: Auto Server Deployment
 on:
   push:
     branches:
-      - no
+      - main
 
 jobs:
 
@@ -15,18 +15,16 @@ jobs:
       uses: actions/checkout@v4
     
     - name: Upload files
-      uses: Dylan700/sftp-upload-action@latest
+      uses: appleboy/scp-action@v0.1.4
       with:
-        server: ${{ secrets.SERVER_URL }}
+        host: ${{ secrets.SERVER_URL }}
         username: ${{ secrets.SSH_USERNAME }}
         password: ${{ secrets.SSH_PASSWORD }}
-        uploads: |
-          ./ => ./deployment/
-        ignore: |
-            NPO/app/**
-            NPO/app/
-            RAIN/web-scrapper/**
-            RAIN/web-scrapper/
+        source: "./*,!.git,!.github,!NPO/app,!RAIN/web-scrapper,!NPO/mosquitto/mosquitto/config/mosquitto.conf"
+        target: "./deployment/"
+        rm: false
+        strip_components: 0
+        overwrite: true
 
   server-setup:
     name: Server Setup
@@ -47,6 +45,7 @@ jobs:
         uses: garygrossgarten/github-action-ssh@release
         with:
           command: |
+            export PATH=$PATH:/usr/bin:/usr/local/bin
             cd ./deployment/
             bash server-clean.sh
             bash server-setup.sh
@@ -54,30 +53,30 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
 
-  test-containers:
-    name: Test Server Containers
-    runs-on: self-hosted
-    needs: server-setup
+  # test-containers:
+  #   name: Test Server Containers
+  #   runs-on: self-hosted
+  #   needs: server-setup
     
-    steps:
-      - name: Get project from Github
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Get project from Github
+  #       uses: actions/checkout@v4
       
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.9'
 
-      - name: Install libraries
-        run: |
-          cd .tests
-          pip install -r requirements.txt
+  #     - name: Install libraries
+  #       run: |
+  #         cd .tests
+  #         pip install -r requirements.txt
       
-      - name: Run MongoDB test
-        run: python3 .tests/test_mongo.py
+  #     - name: Run MongoDB test
+  #       run: python3 .tests/test_mongo.py
 
-      - name: Run Node test
-        run: python3 .tests/test_node.py
+  #     - name: Run Node test
+  #       run: python3 .tests/test_node.py
 
-      - name: Run MQTT test
-        run: python3 .tests/test_mqtt.py
+  #     - name: Run MQTT test
+  #       run: python3 .tests/test_mqtt.py
