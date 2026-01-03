@@ -72,7 +72,7 @@ start_master() {
     if [ -f ssh_keys/id_rsa.pub ]; then
         echo ""
         echo "SSH public key:"
-        cat ssh_keys/id_rsa.pub
+        # cat ssh_keys/id_rsa.pub
         echo ""
     fi
 }
