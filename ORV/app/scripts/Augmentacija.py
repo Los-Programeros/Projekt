@@ -32,10 +32,7 @@ if rank == 0:
 comm.Barrier()
 
 def debug_heavy():
-    for x in range(100):
-        total = 0
-        for i in range(10000000):
-            total += i * i
+    time.sleep(3)
 
 def rand_brightness_contrast(img):
     debug_heavy()
