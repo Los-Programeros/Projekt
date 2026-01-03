@@ -1,0 +1,28 @@
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    openssh-client \
+    libopencv-dev \
+    python3-opencv \
+    openmpi-bin \
+    libopenmpi-dev \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /var/run/sshd && \
+    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config && \
+    echo 'root:mpi' | chpasswd
+
+RUN pip install --no-cache-dir mpi4py numpy opencv-python flask
+
+WORKDIR /app
+
+COPY scripts/mpi_service.py /app/scripts/
+COPY scripts/Predprocesiranje.py /app/scripts/
+COPY scripts/Augmentacija.py /app/scripts/
+
+EXPOSE 22 5001
+
+CMD ["/usr/sbin/sshd", "-D"]

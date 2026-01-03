@@ -3,7 +3,7 @@ const FormData = require("form-data");
 const fs = require("fs");
 const path = require("path");
 
-const endpoint = "http://model-container:5000";
+const endpoint = "http://172.18.0.1:5000";
 
 module.exports = {
   trainFaceModel: async (userId, imagePaths) => {

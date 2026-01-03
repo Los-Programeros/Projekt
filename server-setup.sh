@@ -20,7 +20,10 @@ cd ../..
 model="ORV/app"
 cd "$model" || exit 1
 echo -e "${GREEN}Running setup for: $model${NC}"
-timeout 1000 bash setup.sh
+timeout 1000 bash mpi.sh cleanup
+timeout 1000 bash mpi.sh build
+timeout 1000 bash mpi.sh full
+timeout 1000 bash mpi.sh setup-worker-ssh --worker-ip 100.105.86.53 --ssh-port 2222
 echo -e "${BLUE}Done with: $model${NC}"
 cd ../..
 
