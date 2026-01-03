@@ -5,6 +5,7 @@ import uuid
 import random
 from pathlib import Path
 import sys
+import time
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
@@ -30,7 +31,14 @@ if rank == 0:
 
 comm.Barrier()
 
+def debug_heavy():
+    total = 0
+    for i in range(10000000):
+        total += i * i
+    return total
+
 def rand_brightness_contrast(img):
+    debug_heavy()
     a = random.uniform(0.6, 1.4)
     b = random.randint(-20, 20)
     return np.clip(img.astype(np.int16) * a + b, 0, 255).astype(np.uint8)
@@ -74,6 +82,8 @@ my_images = comm.scatter(chunks, root=0)
 if rank == 0:
     print(f"Total images: {len(all_images)}, splitting across {size} processes")
 
+start_time = time.time()
+
 for src in my_images:
     img = cv2.imread(str(src))
     if img is None:
@@ -84,7 +94,9 @@ for src in my_images:
         name = f"{stem}_{f.__name__}_{uuid.uuid4().hex[:6]}.jpg"
         cv2.imwrite(str(src_dir / name), out, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
 
+elapsed = time.time() - start_time
+
 comm.Barrier()
 
 if rank == 0:
-    print(f"Augmentation complete on {size} processes")
+    print(f"Augmentation complete on {size} processes in {elapsed:.2f}s")
