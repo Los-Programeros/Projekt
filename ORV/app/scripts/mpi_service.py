@@ -127,7 +127,11 @@ def process_images():
             ]
         
         result = subprocess.run(mpi_cmd, capture_output=True, text=True)
-        
+
+        print(f"[MPI-SERVICE] MPI output: {result.stdout}", flush=True)
+        if result.stderr:
+            print(f"[MPI-SERVICE] MPI stderr: {result.stderr}", flush=True)
+
         if result.returncode != 0:
             print(f"[MPI-SERVICE] Augmentation failed: {result.stderr}", flush=True)
             return jsonify({"success": False, "error": f"Augmentation failed: {result.stderr}"}), 500
