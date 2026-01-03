@@ -12,6 +12,9 @@ from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import tensorflow as tf
 import uuid
 import shutil
+import requests
+import tarfile
+import io
 
 app = Flask(__name__)
 
@@ -23,6 +26,8 @@ DATA_ROOT = os.path.join("data", "user_faces")
 MODEL_ROOT = os.path.join("data", "models")
 SHARED_NEG_DIR = os.path.abspath(os.path.join("data", "negatives"))
 
+MPI_SERVICE_URL = os.environ.get("MPI_SERVICE_URL", "http://mpi_master:5001")
+
 os.makedirs(DATA_ROOT, exist_ok=True)
 os.makedirs(MODEL_ROOT, exist_ok=True)
 
@@ -32,21 +37,63 @@ def preprocess_and_save_images(user_id, files):
     neg_dir = os.path.join(DATA_ROOT, user_id, "negative")
     os.makedirs(user_dir, exist_ok=True)
 
+    temp_images = []
     for file in files:
         try:
             print(f"[INFO] Processing image {file.filename}")
             image = Image.open(file.stream).convert("RGB")
             image = image.resize((IMAGE_SIZE, IMAGE_SIZE))
-            save_path = os.path.join(user_dir, f"{uuid.uuid4()}.jpg")
-            image.save(save_path)
+            temp_path = f"/tmp/{uuid.uuid4()}.jpg"
+            image.save(temp_path)
+            temp_images.append(temp_path)
         except Exception as e:
             print(f"[ERROR] Failed to process image {file.filename}: {e}")
             continue
 
-    command = f"python process_images.py {user_dir}"
-    print(f"Running: {command}")
-    status_code = os.system(command)
-    print(f"Status code: {status_code}")
+    print(f"[INFO] Sending {len(temp_images)} images to MPI service at {MPI_SERVICE_URL}")
+    
+    try:
+        files_to_send = []
+        for temp_path in temp_images:
+            with open(temp_path, 'rb') as f:
+                files_to_send.append(('images', (os.path.basename(temp_path), f.read(), 'image/jpeg')))
+        
+        response = requests.post(
+            f"{MPI_SERVICE_URL}/process",
+            files=files_to_send,
+            timeout=300
+        )
+        
+        if response.status_code != 200:
+            raise Exception(f"MPI service failed: {response.text}")
+        
+        result = response.json()
+        job_id = result['job_id']
+        image_count = result['image_count']
+        
+        print(f"[INFO] MPI processing complete. Job ID: {job_id}, Images: {image_count}")
+        
+        retrieve_response = requests.get(f"{MPI_SERVICE_URL}/retrieve/{job_id}", timeout=60)
+        
+        if retrieve_response.status_code != 200:
+            raise Exception("Failed to retrieve processed images")
+        
+        tar_buffer = io.BytesIO(retrieve_response.content)
+        with tarfile.open(fileobj=tar_buffer, mode='r:gz') as tar:
+            tar.extractall(user_dir)
+        
+        print(f"[INFO] Extracted {image_count} processed images to {user_dir}")
+        
+    except Exception as e:
+        print(f"[ERROR] MPI processing failed: {e}")
+        print("[INFO] Falling back to original images without augmentation")
+        for temp_path in temp_images:
+            save_path = os.path.join(user_dir, f"{uuid.uuid4()}.jpg")
+            shutil.move(temp_path, save_path)
+    finally:
+        for temp_path in temp_images:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
 
     if os.path.exists(SHARED_NEG_DIR):
         try:
@@ -210,8 +257,6 @@ def predict():
 
 if __name__ == "__main__":
     print("[INFO] Starting Flask app...")
-
     print("[INFO] Preloading MobileNetV2 weights...")
     _ = MobileNetV2(weights='imagenet', include_top=False, input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3))
-
     app.run(host="0.0.0.0", port=5000)
