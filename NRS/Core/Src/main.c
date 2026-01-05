@@ -18,9 +18,14 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
+#include "usbd_cdc_if.h"
+#include <stdio.h>
+#include <string.h>
 
 /* USER CODE END Includes */
 
@@ -31,6 +36,18 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+#define LSM303DLHC_ACC_ADDR  (0x19 << 1)
+#define CTRL_REG1_A   0x20
+#define CTRL_REG4_A   0x23
+#define STATUS_REG_A  0x27
+#define OUT_X_L_A     0x28
+#define OUT_X_H_A     0x29
+#define OUT_Y_L_A     0x2A
+#define OUT_Y_H_A     0x2B
+#define OUT_Z_L_A     0x2C
+#define OUT_Z_H_A     0x2D
+#define WHO_AM_I_A    0x0F
 
 /* USER CODE END PD */
 
@@ -44,9 +61,12 @@ I2C_HandleTypeDef hi2c1;
 
 SPI_HandleTypeDef hspi1;
 
-PCD_HandleTypeDef hpcd_USB_FS;
-
 /* USER CODE BEGIN PV */
+
+int16_t accel_x, accel_y, accel_z;
+uint8_t sensor_data[6];
+char usbBuffer[100];
+uint8_t whoami = 0;
 
 /* USER CODE END PV */
 
@@ -55,13 +75,53 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_SPI1_Init(void);
-static void MX_USB_PCD_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+void LSM303DLHC_Init(void)
+{
+  HAL_StatusTypeDef status;
+  uint8_t config;
+
+  status = HAL_I2C_Mem_Read(&hi2c1, LSM303DLHC_ACC_ADDR, WHO_AM_I_A, 1, &whoami, 1, 1000);
+
+  if(status != HAL_OK || whoami != 0x33)
+  {
+    sprintf(usbBuffer, "sensor error");
+    CDC_Transmit_FS((uint8_t*)usbBuffer, strlen(usbBuffer));
+    HAL_Delay(100);
+  }
+
+  config = 0x57;
+  status = HAL_I2C_Mem_Write(&hi2c1, LSM303DLHC_ACC_ADDR, CTRL_REG1_A, 1, &config, 1, 1000);
+  HAL_Delay(10);
+
+  config = 0x88;
+  status = HAL_I2C_Mem_Write(&hi2c1, LSM303DLHC_ACC_ADDR, CTRL_REG4_A, 1, &config, 1, 1000);
+  HAL_Delay(10);
+}
+
+void LSM303DLHC_Read_Accel(void)
+{
+  HAL_StatusTypeDef status;
+
+  status = HAL_I2C_Mem_Read(&hi2c1, LSM303DLHC_ACC_ADDR, OUT_X_L_A | 0x80, 1, sensor_data, 6, 1000);
+
+  if(status == HAL_OK)
+  {
+    accel_x = (int16_t)((sensor_data[1] << 8) | sensor_data[0]);
+    accel_y = (int16_t)((sensor_data[3] << 8) | sensor_data[2]);
+    accel_z = (int16_t)((sensor_data[5] << 8) | sensor_data[4]);
+
+    accel_x = accel_x >> 4;
+    accel_y = accel_y >> 4;
+    accel_z = accel_z >> 4;
+  }
+}
 
 /* USER CODE END 0 */
 
@@ -96,17 +156,31 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_SPI1_Init();
-  MX_USB_PCD_Init();
+  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
+
+  HAL_Delay(100);
+  LSM303DLHC_Init();
+  HAL_Delay(100);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
+	LSM303DLHC_Read_Accel();
+
+	float acc_x_g = accel_x * 0.001f;
+	float acc_y_g = accel_y * 0.001f;
+	float acc_z_g = accel_z * 0.001f;
+
+	sprintf(usbBuffer, "%.3f,%.3f,%.3f\r\n", acc_x_g, acc_y_g, acc_z_g);
+	CDC_Transmit_FS((uint8_t*)usbBuffer, strlen(usbBuffer));
+
 	HAL_GPIO_TogglePin(GPIOE, LD4_Pin);
-	HAL_Delay(500);
+	HAL_Delay(10);
 
     /* USER CODE END WHILE */
 
@@ -135,7 +209,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL6;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -150,13 +224,13 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_I2C1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
-  PeriphClkInit.USBClockSelection = RCC_USBCLKSOURCE_PLL;
+  PeriphClkInit.USBClockSelection = RCC_USBCLKSOURCE_PLL_DIV1_5;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -179,7 +253,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x2000090E;
+  hi2c1.Init.Timing = 0x00201D2B;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -248,37 +322,6 @@ static void MX_SPI1_Init(void)
   /* USER CODE BEGIN SPI1_Init 2 */
 
   /* USER CODE END SPI1_Init 2 */
-
-}
-
-/**
-  * @brief USB Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USB_PCD_Init(void)
-{
-
-  /* USER CODE BEGIN USB_Init 0 */
-
-  /* USER CODE END USB_Init 0 */
-
-  /* USER CODE BEGIN USB_Init 1 */
-
-  /* USER CODE END USB_Init 1 */
-  hpcd_USB_FS.Instance = USB;
-  hpcd_USB_FS.Init.dev_endpoints = 8;
-  hpcd_USB_FS.Init.speed = PCD_SPEED_FULL;
-  hpcd_USB_FS.Init.phy_itface = PCD_PHY_EMBEDDED;
-  hpcd_USB_FS.Init.low_power_enable = DISABLE;
-  hpcd_USB_FS.Init.battery_charging_enable = DISABLE;
-  if (HAL_PCD_Init(&hpcd_USB_FS) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USB_Init 2 */
-
-  /* USER CODE END USB_Init 2 */
 
 }
 
