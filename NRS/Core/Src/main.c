@@ -2,17 +2,7 @@
 /**
   ******************************************************************************
   * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2026 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
+  * @brief          : Main program body - ESP32 WiFi AT Commands
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -22,7 +12,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
 #include "usbd_cdc_if.h"
 #include <stdio.h>
 #include <string.h>
@@ -49,6 +38,12 @@
 #define OUT_Z_H_A     0x2D
 #define WHO_AM_I_A    0x0F
 
+// WiFi Configuration
+#define WIFI_SSID     "Jan's iPhone"
+#define WIFI_PASSWORD "banana123"
+#define SERVER_IP     "172.20.10.2"  // IP računalnika
+#define SERVER_PORT   "8080"
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -61,12 +56,20 @@ I2C_HandleTypeDef hi2c1;
 
 SPI_HandleTypeDef hspi1;
 
+UART_HandleTypeDef huart1;
+
 /* USER CODE BEGIN PV */
 
 int16_t accel_x, accel_y, accel_z;
 uint8_t sensor_data[6];
 char usbBuffer[100];
 uint8_t whoami = 0;
+
+// ESP32 buffers
+uint8_t esp_rx_buffer[512];
+uint8_t esp_rx_byte;
+uint16_t esp_rx_index = 0;
+uint8_t esp_ready = 0;
 
 /* USER CODE END PV */
 
@@ -75,7 +78,14 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
+
+uint8_t ESP32_Init(void);
+void ESP32_SendCommand(char* cmd);
+uint8_t ESP32_WaitResponse(char* expected, uint32_t timeout);
+uint8_t ESP32_ConnectWiFi(void);
+void ESP32_SendData(char* data);
 
 /* USER CODE END PFP */
 
@@ -89,26 +99,24 @@ void LSM303DLHC_Init(void)
 
   status = HAL_I2C_Mem_Read(&hi2c1, LSM303DLHC_ACC_ADDR, WHO_AM_I_A, 1, &whoami, 1, 1000);
 
+  // Če senzor ne dela, ne smemo ubiti programa, samo ignoriramo za zdaj
   if(status != HAL_OK || whoami != 0x33)
   {
-    sprintf(usbBuffer, "sensor error");
-    CDC_Transmit_FS((uint8_t*)usbBuffer, strlen(usbBuffer));
-    HAL_Delay(100);
+    // Sensor error handling
   }
 
   config = 0x57;
-  status = HAL_I2C_Mem_Write(&hi2c1, LSM303DLHC_ACC_ADDR, CTRL_REG1_A, 1, &config, 1, 1000);
+  HAL_I2C_Mem_Write(&hi2c1, LSM303DLHC_ACC_ADDR, CTRL_REG1_A, 1, &config, 1, 1000);
   HAL_Delay(10);
 
   config = 0x88;
-  status = HAL_I2C_Mem_Write(&hi2c1, LSM303DLHC_ACC_ADDR, CTRL_REG4_A, 1, &config, 1, 1000);
+  HAL_I2C_Mem_Write(&hi2c1, LSM303DLHC_ACC_ADDR, CTRL_REG4_A, 1, &config, 1, 1000);
   HAL_Delay(10);
 }
 
 void LSM303DLHC_Read_Accel(void)
 {
   HAL_StatusTypeDef status;
-
   status = HAL_I2C_Mem_Read(&hi2c1, LSM303DLHC_ACC_ADDR, OUT_X_L_A | 0x80, 1, sensor_data, 6, 1000);
 
   if(status == HAL_OK)
@@ -120,6 +128,112 @@ void LSM303DLHC_Read_Accel(void)
     accel_x = accel_x >> 4;
     accel_y = accel_y >> 4;
     accel_z = accel_z >> 4;
+  }
+}
+
+// --- POPRAVLJENE ESP FUNKCIJE ---
+
+void ESP32_SendCommand(char* cmd)
+{
+  HAL_UART_Transmit(&huart1, (uint8_t*)cmd, strlen(cmd), 1000);
+  // ODSTRANJEN HAL_Delay! Moramo takoj poslušati odgovor.
+}
+
+uint8_t ESP32_WaitResponse(char* expected, uint32_t timeout)
+{
+  uint32_t start = HAL_GetTick();
+  esp_rx_index = 0;
+  memset(esp_rx_buffer, 0, sizeof(esp_rx_buffer));
+
+  while((HAL_GetTick() - start) < timeout)
+  {
+    if(HAL_UART_Receive(&huart1, &esp_rx_byte, 1, 10) == HAL_OK)
+    {
+      if(esp_rx_index < sizeof(esp_rx_buffer) - 1)
+      {
+        esp_rx_buffer[esp_rx_index++] = esp_rx_byte;
+        esp_rx_buffer[esp_rx_index] = '\0'; // Null-terminate
+
+        if(strstr((char*)esp_rx_buffer, expected) != NULL)
+        {
+          return 1; // Našli smo odgovor
+        }
+      }
+    }
+  }
+  return 0; // Timeout
+}
+
+uint8_t ESP32_Init(void)
+{
+  // 1. Test AT komunikacije (3 poskusi)
+  for(int i=0; i<3; i++) {
+      ESP32_SendCommand("AT\r\n");
+      if(ESP32_WaitResponse("OK", 500)) break; // Uspeh!
+      if(i == 2) return 0; // 3x neuspeh -> VRNI NAPAKO (0)
+      HAL_Delay(500);
+  }
+
+  // 2. Reset
+  ESP32_SendCommand("AT+RST\r\n");
+  HAL_Delay(3000); // Nujno čakanje na reboot
+
+  // 3. Station Mode
+  ESP32_SendCommand("AT+CWMODE=1\r\n");
+  if(!ESP32_WaitResponse("OK", 1000)) return 0;
+
+  return 1; // Vse OK
+}
+
+uint8_t ESP32_ConnectWiFi(void)
+{
+  char cmd[128];
+  sprintf(cmd, "AT+CWJAP=\"%s\",\"%s\"\r\n", WIFI_SSID, WIFI_PASSWORD);
+  ESP32_SendCommand(cmd);
+
+  // Čakamo do 15 sekund na povezavo
+  if(ESP32_WaitResponse("WIFI CONNECTED", 15000))
+  {
+    HAL_Delay(1000);
+    // Pridobi IP (samo da preverimo, če je DHCP delal)
+    ESP32_SendCommand("AT+CIFSR\r\n");
+    ESP32_WaitResponse("OK", 2000);
+
+    esp_ready = 1;
+    return 1; // USPEH
+  }
+
+  esp_ready = 0;
+  return 0; // NAPAKA
+}
+
+void ESP32_SendData(char* data)
+{
+  char cmd[128];
+  uint16_t data_len = strlen(data);
+
+  if(!esp_ready) return;
+
+  // TCP povezava
+  sprintf(cmd, "AT+CIPSTART=\"TCP\",\"%s\",%s\r\n", SERVER_IP, SERVER_PORT);
+  ESP32_SendCommand(cmd);
+
+  if(ESP32_WaitResponse("CONNECT", 2000))
+  {
+    // Priprava na pošiljanje
+    sprintf(cmd, "AT+CIPSEND=%d\r\n", data_len);
+    ESP32_SendCommand(cmd);
+
+    if(ESP32_WaitResponse(">", 1000))
+    {
+      // Pošiljanje podatkov
+      HAL_UART_Transmit(&huart1, (uint8_t*)data, data_len, 1000);
+      ESP32_WaitResponse("SEND OK", 1000);
+    }
+
+    // Zapri povezavo (da ne zabašemo ESP-ja)
+    ESP32_SendCommand("AT+CIPCLOSE\r\n");
+    ESP32_WaitResponse("OK", 500); // Krajši timeout
   }
 }
 
@@ -157,32 +271,92 @@ int main(void)
   MX_I2C1_Init();
   MX_SPI1_Init();
   MX_USB_DEVICE_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_Delay(100);
-  LSM303DLHC_Init();
-  HAL_Delay(100);
+    HAL_Delay(2000); // Stabilizacija napajanja
 
-  /* USER CODE END 2 */
+    // 1. FAZA: RESET VSEH LUČK
+    HAL_GPIO_WritePin(GPIOE, LD3_Pin|LD4_Pin|LD5_Pin|LD6_Pin|LD7_Pin|LD8_Pin|LD9_Pin|LD10_Pin, GPIO_PIN_RESET);
+
+    // Prižgi RDEČO (LD3) - Pomeni: Začetek
+    HAL_GPIO_WritePin(GPIOE, LD3_Pin, GPIO_PIN_SET);
+    HAL_Delay(1000);
+
+    // --- KORAK 1: ESP INITIALIZACIJA ---
+    if(ESP32_Init() == 1)
+    {
+        // USPEH: Prižgi ORANŽNO (LD5)
+        HAL_GPIO_WritePin(GPIOE, LD5_Pin, GPIO_PIN_SET);
+    }
+    else
+    {
+        // NAPAKA: Rdeča utripa v neskončnost
+        while(1) {
+            HAL_GPIO_TogglePin(GPIOE, LD3_Pin);
+            HAL_Delay(200); // Hitro utripanje = ESP se ne odziva
+        }
+    }
+
+    HAL_Delay(500);
+
+    // --- KORAK 2: WIFI POVEZAVA ---
+    if(ESP32_ConnectWiFi() == 1)
+    {
+        // USPEH: Ugasni Rdečo/Oranžno, Prižgi ZELENO (LD9)
+        HAL_GPIO_WritePin(GPIOE, LD3_Pin|LD5_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOE, LD9_Pin, GPIO_PIN_SET); // ZELENA = ZMAGA
+    }
+    else
+    {
+        // NAPAKA: Oranžna utripa v neskončnost
+        while(1) {
+            HAL_GPIO_TogglePin(GPIOE, LD5_Pin);
+            HAL_Delay(500); // Počasno utripanje = WiFi napaka
+        }
+    }
+
+    // Če pridemo do sem, gori ZELENA (LD9) in gremo v while zanko
+
+    // Inicializacija senzorja (poskusimo, če dela)
+    // LSM303DLHC_Init();
+
+    /* USER CODE END 2 */
 
   /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
+    /* USER CODE BEGIN WHILE */
 
-  while (1)
-  {
-	LSM303DLHC_Read_Accel();
+      uint32_t last_send = 0;
 
-	float acc_x_g = accel_x * 0.001f;
-	float acc_y_g = accel_y * 0.001f;
-	float acc_z_g = accel_z * 0.001f;
+      while (1)
+      {
+        // Če senzor dela, odkomentiraj:
+        // LSM303DLHC_Read_Accel();
 
-	sprintf(usbBuffer, "%.3f,%.3f,%.3f\r\n", acc_x_g, acc_y_g, acc_z_g);
-	CDC_Transmit_FS((uint8_t*)usbBuffer, strlen(usbBuffer));
+        // Zaenkrat testni podatki, da vidimo če WiFi dela
+        float acc_x_g = 0.11f;
+        float acc_y_g = 0.22f;
+        float acc_z_g = 0.99f;
 
-	HAL_GPIO_TogglePin(GPIOE, LD4_Pin);
-	HAL_Delay(10);
+        // Pošiljanje vsakih 200ms
+        if(HAL_GetTick() - last_send > 200)
+        {
+          char wifi_data[128];
+          // JSON format za strežnik
+          sprintf(wifi_data, "{\"x\":%.2f,\"y\":%.2f,\"z\":%.2f}\n", acc_x_g, acc_y_g, acc_z_g);
 
-    /* USER CODE END WHILE */
+          ESP32_SendData(wifi_data);
+
+          // Utripni MODRO (LD4) ob vsakem pošiljanju - srčni utrip
+          HAL_GPIO_TogglePin(GPIOE, LD4_Pin);
+
+          last_send = HAL_GetTick();
+        }
+
+        // Ne uporabljaj prevelikih delayev v while zanki
+        // HAL_Delay(10);
+
+        /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
@@ -228,7 +402,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_I2C1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_USART1
+                              |RCC_PERIPHCLK_I2C1;
+  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
   PeriphClkInit.USBClockSelection = RCC_USBCLKSOURCE_PLL_DIV1_5;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
@@ -326,6 +502,41 @@ static void MX_SPI1_Init(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 9600;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -390,7 +601,6 @@ static void MX_GPIO_Init(void)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
   while (1)
   {
