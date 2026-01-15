@@ -4,7 +4,7 @@ Ta projekt bere podatke iz vgrajenega pospeškometra (LSM303DLHC) na **STM32F3 D
 
 ## 🔌 Povezava Strojne Opreme (Wiring)
 
-Za delovanje je potrebno povezati UART komunikacijo med STM32 in ESP modulom.
+Za delovanje je potrebno povezati UART komunikacijo med STM32 in ESP modulom. Za pomoč si poglej folder **.pics**
 
 | ESP32 pin| STM32 Pin | 
 |:---| :--- | :--- | 
