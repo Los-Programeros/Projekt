@@ -251,7 +251,7 @@ int main(void)
       }
     }
 
-    HAL_Delay(200); // Pošiljaj 5x na sekundo (hitreje kot prej, da vidiš premike)
+    HAL_Delay(50); // Pošiljaj 5x na sekundo (hitreje kot prej, da vidiš premike)
   }
   /* USER CODE END 3 */
 }

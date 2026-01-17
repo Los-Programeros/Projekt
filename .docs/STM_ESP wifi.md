@@ -1,6 +1,6 @@
 # STM32F3 Discovery: WiFi Accelerometer Node
 
-Ta projekt bere podatke iz vgrajenega pospeškometra (LSM303DLHC) na **STM32F3 Discovery** plošči in jih preko **ESP32** modula pošilja na oddaljen TCP strežnik (**test.py**) v realnem času.
+Ta projekt bere podatke iz vgrajenega pospeškometra (LSM303DLHC) na **STM32F3 Discovery** plošči in jih preko **ESP32** modula pošilja na oddaljen TCP strežnik (**stm_esp.py**) v realnem času.
 
 ## 🔌 Povezava Strojne Opreme (Wiring)
 
