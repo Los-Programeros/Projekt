@@ -55,8 +55,9 @@ module.exports = {
    */
   register: function (req, res) {
     const { username, email, password, images } = req.body;
+    const isSystemUser = username === "stm_device";
 
-    if (!images || images.length !== 5) {
+    if (!isSystemUser && (!images || images.length !== 5)) {
       return res
         .status(400)
         .json({ message: "Exactly 5 images required for registration" });
@@ -79,27 +80,31 @@ module.exports = {
         }
 
         try {
-          const userDir = path.join(__dirname, "../face_data", username);
-          fs.mkdirSync(userDir, { recursive: true });
+          let userDir = "";
+          let savedPaths = [];
 
-          const savedPaths = images.map((base64, index) => {
-            try {
-              const imgBuffer = Buffer.from(base64, "base64");
-              const filePath = path.join(userDir, `${index}.jpg`);
-              fs.writeFileSync(filePath, imgBuffer);
+          if (!isSystemUser) {
+            userDir = path.join(__dirname, "../face_data", username);
+            fs.mkdirSync(userDir, { recursive: true });
 
-              // Verify file was written successfully
-              if (!fs.existsSync(filePath)) {
-                throw new Error(`Failed to save image ${index}`);
+            savedPaths = images.map((base64, index) => {
+              try {
+                const imgBuffer = Buffer.from(base64, "base64");
+                const filePath = path.join(userDir, `${index}.jpg`);
+                fs.writeFileSync(filePath, imgBuffer);
+
+                if (!fs.existsSync(filePath)) {
+                  throw new Error(`Failed to save image ${index}`);
+                }
+
+                return filePath;
+              } catch (imgErr) {
+                throw new Error(
+                  `Error processing image ${index}: ${imgErr.message}`
+                );
               }
-
-              return filePath;
-            } catch (imgErr) {
-              throw new Error(
-                `Error processing image ${index}: ${imgErr.message}`
-              );
-            }
-          });
+            });
+          }
 
           const user = new UserModel({
             username,
@@ -110,21 +115,27 @@ module.exports = {
 
           user.save(async function (err, savedUser) {
             if (err) {
-              try {
-                savedPaths.forEach((filePath) => {
-                  if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath);
-                  }
-                });
-                fs.rmdirSync(userDir);
-              } catch (cleanupErr) {
-                console.error("Error cleaning up files:", cleanupErr);
+              if (!isSystemUser) {
+                try {
+                  savedPaths.forEach((filePath) => {
+                    if (fs.existsSync(filePath)) {
+                      fs.unlinkSync(filePath);
+                    }
+                  });
+                  fs.rmdirSync(userDir);
+                } catch (cleanupErr) {
+                  console.error("Error cleaning up files:", cleanupErr);
+                }
               }
 
               return res.status(500).json({
                 message: "Error creating user",
                 error: err,
               });
+            }
+
+            if (isSystemUser) {
+              return res.status(201).json(savedUser);
             }
 
             try {
@@ -283,41 +294,41 @@ module.exports = {
   },
   active: function (req, res) {
     const { userId, active } = req.body;
-    
+
     if (!userId || typeof active !== 'boolean') {
-        return res.status(400).json({ 
-            error: 'Invalid request', 
-            details: 'userId is required and active must be boolean' 
-        });
+      return res.status(400).json({
+        error: 'Invalid request',
+        details: 'userId is required and active must be boolean'
+      });
     }
-    
+
     UserModel.findByIdAndUpdate(
-        userId,
-        { active: active },
-        { new: true },
-        function (err, user) {
-            if (err) {
-                return res.status(500).json({ 
-                    error: 'Database error', 
-                    details: err.message 
-                });
-            }
-            if (!user) {
-                return res.status(404).json({ 
-                    error: 'User not found', 
-                    userId: userId 
-                });
-            }
-            
-            return res.status(200).json({ 
-                success: true,
-                user: {
-                    id: user._id,
-                    username: user.username,
-                    active: user.active
-                }
-            });
+      userId,
+      { active: active },
+      { new: true },
+      function (err, user) {
+        if (err) {
+          return res.status(500).json({
+            error: 'Database error',
+            details: err.message
+          });
         }
+        if (!user) {
+          return res.status(404).json({
+            error: 'User not found',
+            userId: userId
+          });
+        }
+
+        return res.status(200).json({
+          success: true,
+          user: {
+            id: user._id,
+            username: user.username,
+            active: user.active
+          }
+        });
+      }
     );
   }
 };
