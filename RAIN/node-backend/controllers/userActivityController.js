@@ -59,27 +59,36 @@ module.exports = {
   create: async function (req, res) {
     const { userId, visited } = req.body;
 
-    if (!userId || !visited) {
+    if (!userId) {
       return res
         .status(400)
-        .json({ message: "userId and visited landmarkId are required." });
+        .json({ message: "userId is required." });
     }
 
     try {
       let userActivity = await UseractivityModel.findOne({ user: userId });
 
-      const visitEntry = {
-        landmark: visited,
-        visitedAt: new Date(),
-      };
+      if (visited) {
+        const visitEntry = {
+          landmark: visited,
+          visitedAt: new Date(),
+        };
 
-      if (userActivity) {
-        userActivity.visited.push(visitEntry);
+        if (userActivity) {
+          userActivity.visited.push(visitEntry);
+        } else {
+          userActivity = new UseractivityModel({
+            user: userId,
+            visited: [visitEntry],
+          });
+        }
       } else {
-        userActivity = new UseractivityModel({
-          user: userId,
-          visited: [visitEntry],
-        });
+        if (!userActivity) {
+          userActivity = new UseractivityModel({
+            user: userId,
+            visited: [],
+          });
+        }
       }
 
       const saved = await userActivity.save();
