@@ -15,7 +15,7 @@ import shutil
 import requests
 import tarfile
 import io
-from scripts import flocic_util #import flocic_util.py da maš logiko od Flocica
+import flocic_util #import flocic_util.py da maš logiko od Flocica
 from pathlib import Path 
 
 app = Flask(__name__)
