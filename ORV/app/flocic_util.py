@@ -4,10 +4,11 @@ import struct
 import math
 import sys
 import os
-try:
-    from .bitstream import BitStream 
-except ImportError:
-    from bitstream import BitStream 
+from bitstream import BitStream
+# try:
+#     from .bitstream import BitStream 
+# except ImportError:
+#     from bitstream import BitStream 
 
 sys.setrecursionlimit(2000000)
 
