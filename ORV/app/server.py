@@ -15,6 +15,8 @@ import shutil
 import requests
 import tarfile
 import io
+import flocic_util
+from pathlib import Path
 
 app = Flask(__name__)
 
@@ -122,6 +124,30 @@ def preprocess_and_save_images(user_id, files):
 
 def train_model(user_id, user_data_dir):
     print(f"[INFO] Training model for user {user_id} using data from {user_data_dir}")
+
+     # --- ZAČETEK FLOCIC INTEGRACIJE ---
+    print("[INFO] Checking for FLoCIC compressed data...")
+    # Najdi vse .bin datoteke v positive/negative direktorijih
+    bin_files = list(Path(user_data_dir).rglob("*.bin"))
+
+    if bin_files:
+        print(f"[INFO] Found {len(bin_files)} compressed files. Decompressing...")
+        for bin_file in bin_files:
+            try:
+                # Pretvori nazaj v numpy array
+                img_array = flocic_util.decompress_to_array(str(bin_file))
+                
+                # Shranimo kot standardni JPG, da lahko KERAS prebere
+                img_obj = Image.fromarray(img_array)
+                jpg_path = str(bin_file.with_suffix(".jpg"))
+                img_obj.save(jpg_path)
+                
+                # Odstranimo .bin datoteko da sprostimo prostor in se izognemo dvojnemu procesiranju
+                os.remove(bin_file)
+            except Exception as e:
+                print(f"[ERROR] Failed to decompress {bin_file}: {e}")
+        print("[INFO] Decompression complete.")
+     # --- KONEC FLOCIC INTEGRACIJE ---
 
     datagen = tf.keras.preprocessing.image.ImageDataGenerator(
         rescale=1./255,

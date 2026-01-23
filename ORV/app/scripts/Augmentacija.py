@@ -6,6 +6,7 @@ import random
 from pathlib import Path
 import sys
 import time
+import flocic_util #import flocic_util.py da maš logiko od Flocica
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
@@ -88,8 +89,19 @@ for src in my_images:
     stem = src.stem
     for f in augs:
         out = f(img)
-        name = f"{stem}_{f.__name__}_{uuid.uuid4().hex[:6]}.jpg"
-        cv2.imwrite(str(src_dir / name), out, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+        # Pretvori v grayscale, ker je FLOCIC 1-kanaln (za 1 barvo)
+        gray_out = cv2.cvtColor(out, cv2.COLOR_BGR2GRAY)
+    
+        # Shrani kot FLOCIC namest JPG
+        name = f"{stem}_{f.__name__}_{uuid.uuid4().hex[:6]}.bin"
+        flocic_util.compress_to_file(gray_out, str(src_dir / name))
+    
+        print(f"[RANK {rank}] Compressed {name} using FLoCIC")
+        
+        #=================STARA KODA========================
+        # out = f(img)
+        # name = f"{stem}_{f.__name__}_{uuid.uuid4().hex[:6]}.jpg"
+        # cv2.imwrite(str(src_dir / name), out, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
 
 elapsed = time.time() - start_time
 
