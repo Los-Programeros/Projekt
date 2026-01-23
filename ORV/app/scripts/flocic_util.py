@@ -72,15 +72,46 @@ def compress_to_file(image_array, output_path):
         f.write(struct.pack('<HBI I', X, int(C[0]), int(C[n-1]), n))
         f.write(B.get_bytes())
 
+# def decompress_to_array(input_path):
+#     """Decompresses a FLoCIC .bin file back to a numpy array"""
+#     with open(input_path, 'rb') as f:
+#         data = f.read()
+#     X, c0, clast, n = struct.unpack('<HBI I', data[:11])
+#     B = BitStream(data[11:])
+#     C = np.zeros(n, dtype=np.int64)
+#     C[0], C[n-1] = c0, clast
+#     de_ic(C, 0, n - 1, C[0], C[n-1], B)
+#     N = np.concatenate(([C[0]], np.diff(C)))
+#     E = np.where(N % 2 == 0, N // 2, -((N + 1) // 2)).astype(np.int32)
+#     return inverse_predict(E, X, n // X)
+
 def decompress_to_array(input_path):
-    """Decompresses a FLoCIC .bin file back to a numpy array"""
     with open(input_path, 'rb') as f:
         data = f.read()
+    
+    # Header unpacking (X, c0, clast, n)
     X, c0, clast, n = struct.unpack('<HBI I', data[:11])
     B = BitStream(data[11:])
+    
     C = np.zeros(n, dtype=np.int64)
     C[0], C[n-1] = c0, clast
+    
+    # Run de-interpolation coding
     de_ic(C, 0, n - 1, C[0], C[n-1], B)
-    N = np.concatenate(([C[0]], np.diff(C)))
-    E = np.where(N % 2 == 0, N // 2, -((N + 1) // 2)).astype(np.int32)
-    return inverse_predict(E, X, n // X)
+    
+    # Reconstruct differences
+    N = np.zeros(n, dtype=np.int64)
+    N[0] = C[0]
+    for i in range(1, n):
+        N[i] = C[i] - C[i-1]
+        
+    # Reconstruct Prediction Errors
+    E = np.zeros(n, dtype=np.int32)
+    E[0] = N[0]
+    for i in range(1, n):
+        if N[i] % 2 == 0: E[i] = N[i] // 2
+        else: E[i] = -((N[i] + 1) // 2)
+        
+    Y = n // X
+    # Return the restored image as a numpy array
+    return inverse_predict(E, X, Y)

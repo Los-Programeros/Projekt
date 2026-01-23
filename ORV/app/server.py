@@ -15,8 +15,8 @@ import shutil
 import requests
 import tarfile
 import io
-import flocic_util
-from pathlib import Path
+from scripts import flocic_util #import flocic_util.py da maš logiko od Flocica
+from pathlib import Path 
 
 app = Flask(__name__)
 
@@ -138,7 +138,7 @@ def train_model(user_id, user_data_dir):
                 img_array = flocic_util.decompress_to_array(str(bin_file))
                 
                 # Shranimo kot standardni JPG, da lahko KERAS prebere
-                img_obj = Image.fromarray(img_array)
+                img_obj = Image.fromarray(img_array).convert("RGB")
                 jpg_path = str(bin_file.with_suffix(".jpg"))
                 img_obj.save(jpg_path)
                 
