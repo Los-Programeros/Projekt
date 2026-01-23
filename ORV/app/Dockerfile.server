@@ -11,6 +11,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY server.py .
+COPY flocic_util.py .
+COPY bitstream.py .
 
 RUN mkdir -p data/user_faces data/models data/negatives
 
